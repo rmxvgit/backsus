@@ -10,6 +10,9 @@ import processar_dados_sih
 
 # python3 pull.py SIA RS 01-24 01-24 2248328
 # TODO: criar forma de conferir se os arquivos foram baixados na íntegra
+# TODO: criar separação de pastas por hospital
+# TODO: descobir como exportar pdf para o front end
+
 
 searchDirs = {
     'SIA': ["/dissemin/publicos/SIASUS/199407_200712/Dados", "/dissemin/publicos/SIASUS/200801_/Dados"],
