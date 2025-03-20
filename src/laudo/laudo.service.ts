@@ -14,12 +14,6 @@ export class LaudoService {
     const cnes_number = parseInt(dto.cnes);
     const laudoName = `laudo${dto.cnes}${dto.estado}${dto.data_inicio}${dto.data_fim}`;
 
-    try {
-      await this.prisma.laudo.delete({ where: { fileName: laudoName } });
-    } catch {
-      console.log('uh');
-    }
-
     exec(
       `python3 scripts/susprocessing/scripts/pull.py BOTH ${dto.estado} ${dto.data_inicio} ${dto.data_fim} ${dto.cnes}`,
       (error, stdout, stderr) => {
@@ -65,9 +59,14 @@ export class LaudoService {
       Hospital: { connect: { cnes: parseInt(dto.cnes) } },
     };
 
-    const laudo_output = await this.prisma.laudo.create({ data: laudo_input });
-
-    return laudo_output;
+    try {
+      const laudo_output = await this.prisma.laudo.create({
+        data: laudo_input,
+      });
+      return laudo_output;
+    } catch {
+      return;
+    }
   }
 
   findAll() {
