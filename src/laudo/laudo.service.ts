@@ -65,7 +65,15 @@ export class LaudoService {
       });
       return laudo_output;
     } catch {
-      return;
+      try {
+        const result = this.prisma.laudo.update({
+          where: { fileName: laudoName },
+          data: { ready: false },
+        });
+        return result;
+      } catch {
+        return 'erro ao criar laudo';
+      }
     }
   }
 
