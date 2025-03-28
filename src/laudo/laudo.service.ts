@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
-import { UpdateLaudoDto } from './dto/update-laudo.dto';
 import { exec } from 'child_process';
 import { PrismaService } from 'src/prisma.service';
 import { Prisma } from '@prisma/client';
-import { log } from 'console';
 
 @Injectable()
 export class LaudoService {
@@ -77,23 +75,24 @@ export class LaudoService {
     }
   }
 
-  findAll() {
-    return `This action returns all laudo`;
+  async findAll() {
+    const laudos = await this.prisma.laudo.findMany();
+    return laudos;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} laudo`;
+  async findByCnes(cnes: number) {
+    const laudos = await this.prisma.laudo.findMany({
+      where: { hospitalCnes: cnes },
+    });
+    return laudos;
   }
 
-  update(id: number, updateLaudoDto: UpdateLaudoDto) {
-    return `This action updates a #${id} laudo`;
+  async findById(id: number) {
+    const laudo = await this.prisma.laudo.findUnique({ where: { id: id } });
+    return laudo;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} laudo`;
-  }
-
-  private validateCreateLaudoDto(dto: CreateLaudoDto) {
-    //TODO: escrever essa função
+  async remove(id: number) {
+    return await this.prisma.laudo.delete({ where: { id: id } });
   }
 }
