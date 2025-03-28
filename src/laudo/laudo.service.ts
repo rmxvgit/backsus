@@ -54,6 +54,7 @@ export class LaudoService {
       end: dto.data_fim,
       fileName: `laudo${dto.cnes}${dto.estado}${dto.data_inicio}${dto.data_fim}`,
       ready: false,
+      estado: dto.estado,
       Hospital: { connect: { cnes: parseInt(dto.cnes) } },
     };
 
