@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  /*Patch,*/
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { HosiptalService } from './hosiptal.service';
 import { CreateHosiptalDto } from './dto/create-hosiptal.dto';
-import { UpdateHosiptalDto } from './dto/update-hosiptal.dto';
+//import { UpdateHosiptalDto } from './dto/update-hosiptal.dto';
 
 @Controller('hosiptal')
 export class HosiptalController {
@@ -22,10 +30,12 @@ export class HosiptalController {
     return this.hosiptalService.findOne(+id);
   }
 
+  /*
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateHosiptalDto: UpdateHosiptalDto) {
     return this.hosiptalService.update(+id, updateHosiptalDto);
   }
+  */
 
   @Delete(':id')
   remove(@Param('id') id: string) {
