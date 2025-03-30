@@ -1,18 +1,20 @@
 import ftplib as ftp
-import pandas as pd
-import sys
 import os
-from multiprocessing import Pool
+import sys
+from multiprocessing.dummy import Pool
 
-from tempo import Tdata
+import laudo_final
+import pandas as pd
 import processar_dados_sia
 import processar_dados_sih
+import sigtap_procedimento
+from tempo import Tdata
 
 # python3 pull.py SIA RS 01-24 01-24 2248328
 # TODO: criar forma de conferir se os arquivos foram baixados na íntegra
 # TODO: criar separação de pastas por hospital
 # TODO: descobir como exportar pdf para o front end
-
+# TODO: reorganizar o codigo para carregar os arquivos sigtap uma vez ao mês, fazer o mesmo para o arquivo da selic
 
 searchDirs = {
     'SIA': ["/dissemin/publicos/SIASUS/199407_200712/Dados", "/dissemin/publicos/SIASUS/200801_/Dados"],
@@ -28,10 +30,9 @@ search_prefix = {
 # python pull.py <SIA/SIH> <estado> <data-inicio> <data-fim> <CNES>
 
 def main():
-    python_file = sys.argv[0]  # roda o arquivo do lugar certo
+    python_file = sys.argv[0]
     python_file_dir = os.path.dirname(python_file)
-    if python_file_dir != '':
-        os.chdir(python_file_dir)
+    # os.chdir(python_file_dir)
 
     args = sys.argv[1:]
     if not validate_args(args): return
@@ -45,6 +46,7 @@ def main():
 
     verify_existence_of_dbc2dbf_converter()
     verify_existence_of_dbf2csv_converter()
+    sigtap(Tdata.data_atual_aaaamm())
     get_and_process_data(estado, data_inicio, data_fim, sistema, cnes)
     unite_files()
 
@@ -81,15 +83,13 @@ def validate_args(args: list[str]) -> bool:
 
     try:
         data_inicio = Tdata.str_to_data(args[2])
-    except ValueError:
+    except:
         print(f"data de início em um formato inválido: {args[2]}")
-        return False
 
     try:
         data_fim = Tdata.str_to_data(args[3])
-    except ValueError:
+    except:
         print(f"data de início em um formato inválido: {args[2]}")
-        return False
 
     if data_fim < data_inicio:
         print("Data de início maior que data de fim")
@@ -102,21 +102,17 @@ def find_files_of_interest(estado: str, data_inicio: Tdata, data_fim: Tdata, sih
     search_dirs = searchDirs[sih_sia]
     ftp_client = ftp.FTP("ftp.datasus.gov.br")
 
-    try:
-        ftp_client.login()
+    try: ftp_client.login()
     except:
         print("não foi possível fazer login no ftp do sus")
 
     for dir in search_dirs:
         print(f"{dir} <---- vasculhando diretório")
-
         def append_to_file(file: str):
             file = file.split(' ')[-1]
-            dateString = file[6:8] + "-" + file[4:6]
-            try:
-                date = Tdata.str_to_data(dateString)
-            except ValueError:
-                return
+            dateString =  file[6:8] + "-" + file[4:6]
+            try: date = Tdata.str_to_data(dateString)
+            except: return
 
             if file[0:2] != search_prefix[sih_sia] or estado != file[2:4] or date < data_inicio or data_fim < date:
                 return
@@ -139,8 +135,11 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
     print(f"Arquivos a serem baixados:\n{files_of_interest}")
 
     create_storage_folders()
+    
+    
 
     with Pool(10) as p:
+        print([[file, cnes, sia_sih] for file in files_of_interest])
         p.map(dowload_e_processamento, [[file, cnes, sia_sih] for file in files_of_interest])
 
 
@@ -163,17 +162,15 @@ def create_storage_folders() -> None:
         os.makedirs("../finalcsvs")
     except:
         pass
+    try:
+        os.makedirs("../laudos")
+    except:
+        pass
 
 
-def unite_files():
-    print("unindo arquivos .csv")
-    laudo_files = os.listdir("../finalcsvs")
-    composite_file = os.open("../finalcsvs/resultado_final.csv", os.O_CREAT | os.O_WRONLY)
-    for laudo_file in laudo_files:
-        simple_file = os.open(f"../finalcsvs/{laudo_file}", os.O_RDONLY)
-        os.write(composite_file, os.read(simple_file, os.fstat(simple_file).st_size))
-        os.close(simple_file)
-    os.close(composite_file)
+def unite_files():    
+    laudo_final.main()
+    
 
 
 def file_was_already_dowloaded(file_name: str) -> bool:
@@ -219,6 +216,21 @@ def create_pdf_from_csv(source_file_path: str, output_file_path: str):
 
     pdf.output(output_file_path)
 
+def sigtap(data:str):
+    print("Carregando arquivos sigtap")
+    arquivo_mais_recente = sigtap_procedimento.arquivos_procedimentos_ftp(f'{data}')
+    
+    if not arquivo_mais_recente:
+        print("Nenhum arquivo correspondente foi encontrado.")
+        return
+
+    print("Arquivos de descrição e origem")
+    os.system(f"../exes/unzip {arquivo_mais_recente} ../dados")
+
+    sigtap_procedimento.descricao_procedimento('../dados/tb_procedimento.txt', '../dados/desc_procedimento.csv')
+    sigtap_procedimento.origem_sia_sih('../dados/rl_procedimento_sia_sih.txt', '../dados/origem_sia_sih.csv')
+
+    print("Conversão concluída com sucesso!")
 
 def dowload_e_processamento(file_and_cnes: list[str]):
     file = file_and_cnes[0]
@@ -243,6 +255,7 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv {cnes} {sys.argv[1]}")
 
     print("Processando dados do csv por cnes...")
+    
     if (sih_sia == 'SIA'):
         processar_dados_sia.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
     else:

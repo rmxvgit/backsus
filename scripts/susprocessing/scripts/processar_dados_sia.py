@@ -1,11 +1,10 @@
 import math as m
 import sys
 import time as t
-from tempo import Tdata
 
-from tempo import Tdata
 import numpy as np
 import pandas as pd
+from tempo import Tdata
 
 # definição de padrão da chamada do script processar dados
 # python3 processar_dados.py <sourceFile> <CNES> <destinationFIle>
@@ -79,19 +78,19 @@ def correcao_absoluta(data_inicio: Tdata, data_fim: Tdata, selic_arr: list[float
 
 
 def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: Tdata, data_fim: Tdata):
-    selic_arr = CarregaSelic()
-    taxa_de_correcao_para_esse_mes = correcao_absoluta(data_inicio, data_fim, selic_arr)
+    # selic_arr = CarregaSelic()
+    taxa_de_correcao_para_esse_mes = 0.2 #correcao_absoluta(data_inicio, data_fim, selic_arr)
 
-    porcentagem_de_correcao = (taxa_de_correcao_para_esse_mes - 1)*100
+    # porcentagem_de_correcao = (taxa_de_correcao_para_esse_mes - 1)*100
 
     df_main = pd.read_csv(csv_file_path, encoding='utf-8-sig', low_memory=False)
-    df_proc = pd.read_csv("../dados/dadosprocedimentos.csv")
-    df_tunep = pd.read_csv("../dados/tabela_tunep_mais_origem.csv", encoding='latin1')
+    df_proc = pd.read_csv("../dados/desc_procedimento.csv")
+    df_tunep = pd.read_csv("../dados/tabela_tunep_mais_origem.csv", encoding='utf-8-sig')
 
     df_filt = df_main[['PA_CODUNI', 'PA_CMP', 'PA_PROC_ID', 'PA_QTDAPR', 'PA_VALPRO']]
 
     df_filt = df_filt[df_filt['PA_QTDAPR'] > 0]
-    df_filt.loc[df_filt['PA_QTDAPR'] > 1, 'PA_VALPRO'] /= df_filt['PA_QTDAPR']
+    df_filt.loc[df_filt['PA_QTDAPR'] > 1, 'PA_VALPRO'] /= df_filt['PA_QTDAPR'] #tirar esse aq
     df_sum = df_filt.groupby(['PA_CODUNI', 'PA_CMP', 'PA_PROC_ID', 'PA_VALPRO'], as_index=False).agg({'PA_QTDAPR': 'sum'})
     df_sum = df_sum.sort_values(by='PA_PROC_ID')
 
@@ -100,10 +99,12 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: 
 
     df_desc = pd.merge(df_sum, df_proc, left_on='PA_PROC_ID', right_on='CO_PROCEDIMENTO', how='left')
     df_desc = df_desc[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'PA_CMP', 'PA_VALPRO', 'PA_QTDAPR']]
-
-    df_desc["IVR"] = df_desc["PA_VALPRO"] * df_desc["PA_QTDAPR"] * 0.5
+    
+    df_desc['PA_VALPRO'] = df_desc["PA_VALPRO"] * df_desc["PA_QTDAPR"] #aarumei
+    df_desc["IVR"] = df_desc["PA_VALPRO"] * 0.5
 
     df_desc['CO_PROCEDIMENTO'] = df_desc['CO_PROCEDIMENTO'].astype(str)
+    df_tunep['TP_PROCEDIMENTO'] = df_tunep['TP_PROCEDIMENTO'] == 'A'
     df_tunep['CO_PROCEDIMENTO'] = df_tunep['CO_PROCEDIMENTO'].astype(str)
     df_desc = pd.merge(df_desc, df_tunep, on='CO_PROCEDIMENTO', how='left').fillna(0)
 
@@ -118,16 +119,11 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: 
     df_desc['CO_PROCEDIMENTO'] = df_desc['CO_PROCEDIMENTO'].str[:2] + "." + df_desc['CO_PROCEDIMENTO'].str[2:4] + "." + df_desc['CO_PROCEDIMENTO'].str[4:6] + "." + df_desc['CO_PROCEDIMENTO'].str[6:9] + "-" + df_desc['CO_PROCEDIMENTO'].str[9]
 
     df_desc['PA_CMP'] = df_desc['PA_CMP'].astype(str).str[4:] + '/' + df_desc['PA_CMP'].astype(str).str[:4]
-    
-    df_desc['PA_VALPRO'] = df_desc['PA_VALPRO'].map(lambda x: f"{x:,.2f}".replace('.', ','))
-    df_desc['IVR/Tunep'] = df_desc['IVR/Tunep'].map(lambda x: f"{x:,.2f}".replace('.', ','))
-    df_desc['correcao'] = df_desc['correcao'].map(lambda x: f"{x:,.2f}".replace('.', ','))
-    df_desc['Total'] = df_desc['Total'].map(lambda x: f"{x:,.2f}".replace('.', ','))
-      
+       
     df_desc['Base SUS'] = 'SIASUS'
 
     df_final = df_desc[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'PA_CMP', 'PA_VALPRO', 'PA_QTDAPR', 'IVR/Tunep', 'correcao', 'Total', 'Base SUS']].rename(
-        columns = {'CO_PROCEDIMENTO': 'Procedimentos', 'NO_PROCEDIMENTO': 'Desc. Procedimento', 'PA_CMP': ' Mês/Ano', 'PA_VALPRO': 'Valor Base (unitário) (R$)', 'PA_QTDAPR': ' Qtd. Base', 'IVR/Tunep': 'IVR/Tunep (R$)', 'correcao' :'Correção'})
+        columns = {'CO_PROCEDIMENTO': 'Procedimentos', 'NO_PROCEDIMENTO': 'Desc. Procedimento', 'PA_CMP': 'Mês/Ano', 'PA_VALPRO': 'Valor Base (unitário) (R$)', 'PA_QTDAPR': 'Qtd. Base', 'IVR/Tunep': 'IVR/Tunep (R$)', 'correcao' :'Correção'})
     print(df_final)
 
     df_final.to_csv(f"{output_file_path}", sep=';', index=False,  encoding='utf-8-sig')
@@ -161,5 +157,3 @@ def main():
     data_fim = get_current_data() #TODO: passar dados por parâmetro assim como para data_início
     
     processar_dados_csv(csv_file_path, output_file_path, data_inicio, data_fim)
-
-# correcao_absoluta({'year': 2001, 'month': 1}, {'year':2001, 'month': 2}, CarregaSelic())
