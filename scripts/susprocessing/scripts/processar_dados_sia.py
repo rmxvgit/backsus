@@ -78,10 +78,10 @@ def correcao_absoluta(data_inicio: Tdata, data_fim: Tdata, selic_arr: list[float
 
 
 def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: Tdata, data_fim: Tdata):
-    # selic_arr = CarregaSelic()
-    taxa_de_correcao_para_esse_mes = 0.2 #correcao_absoluta(data_inicio, data_fim, selic_arr)
+    selic_arr = CarregaSelic()
+    taxa_de_correcao_para_esse_mes = correcao_absoluta(data_inicio, data_fim, selic_arr)
 
-    # porcentagem_de_correcao = (taxa_de_correcao_para_esse_mes - 1)*100
+    porcentagem_de_correcao = (taxa_de_correcao_para_esse_mes - 1)*100
 
     df_main = pd.read_csv(csv_file_path, encoding='utf-8-sig', low_memory=False)
     df_proc = pd.read_csv("../dados/desc_procedimento.csv")
