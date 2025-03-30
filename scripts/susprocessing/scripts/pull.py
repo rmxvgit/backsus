@@ -27,7 +27,7 @@ search_prefix = {
 }
 
 # padrão de chamada do programa:
-# python pull.py <SIA/SIH> <estado> <data-inicio> <data-fim> <CNES>
+# python pull.py <SIA/SIH> <estado>TabelaUnificada_202503_v2503101901.zip <data-inicio> <data-fim> <CNES>
 
 def main():
     python_file = sys.argv[0]
@@ -44,12 +44,22 @@ def main():
     data_fim = Tdata.str_to_data(args[3])
     cnes = args[4]
 
+    subdirectory_name = create_subdirectory(cnes, estado)
     verify_existence_of_dbc2dbf_converter()
     verify_existence_of_dbf2csv_converter()
+    verify_existence_of_unzip_program()
     sigtap(Tdata.data_atual_aaaamm())
-    get_and_process_data(estado, data_inicio, data_fim, sistema, cnes)
-    unite_files()
+    get_and_process_data(estado, data_inicio, data_fim, sistema, cnes, subdirectory_name)
+    unite_files(subdirectory_name)
 
+
+def create_subdirectory(cnes: str, estado: str):
+    subdirectory_name = f'H{cnes}{estado}'
+    try:
+        os.mkdir(f'../{subdirectory_name}')
+    except FileExistsError:
+        pass
+    return subdirectory_name
 
 # verifica a existência do conversor e, caso ele não exista, compila o conversor
 def verify_existence_of_dbf2csv_converter():
@@ -59,7 +69,6 @@ def verify_existence_of_dbf2csv_converter():
         # TODO:
         pass
 
-
 # verifica a existência do conversor e, caso ele não exista, compila o conversor
 def verify_existence_of_dbc2dbf_converter():
     if os.path.exists("../exes/DBF2CSV"):
@@ -68,6 +77,12 @@ def verify_existence_of_dbc2dbf_converter():
         # TODO:
         pass
 
+def verify_existence_of_unzip_program():
+    if os.path.exists("../exes/unzip"):
+        return
+    else:
+        # TODO:
+        pass
 
 def validate_args(args: list[str]) -> bool:
     if len(args) != 5:
@@ -123,7 +138,7 @@ def find_files_of_interest(estado: str, data_inicio: Tdata, data_fim: Tdata, sih
     ftp_client.quit()
     return files
 
-def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_sih: str, cnes: str):
+def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_sih: str, cnes: str, subdirectory_name: str):
     if (sia_sih == 'BOTH'):  # caso especial no qual os dois sistemas são selecionados
         get_and_process_data(estado, data_inicio, data_fim, 'SIA', cnes)
         get_and_process_data(estado, data_inicio, data_fim, 'SIH', cnes)
@@ -134,47 +149,49 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
     files_of_interest = find_files_of_interest(estado, data_inicio, data_fim, sia_sih)
     print(f"Arquivos a serem baixados:\n{files_of_interest}")
 
-    create_storage_folders()
+    create_storage_folders(subdirectory_name)
 
 
 
     with Pool(10) as p:
-        print([[file, cnes, sia_sih] for file in files_of_interest])
-        p.map(dowload_e_processamento, [[file, cnes, sia_sih] for file in files_of_interest])
+        print([[file, cnes, sia_sih, subdirectory_name] for file in files_of_interest])
+        p.map(dowload_e_processamento, [[file, cnes, sia_sih, subdirectory_name] for file in files_of_interest])
 
 
 
 
-def create_storage_folders() -> None:
+def create_storage_folders(subdirectory_name: str) -> None:
+    print(f'{subdirectory_name}\n\n\n')
     try:
-        os.makedirs("../downloads")
+        os.makedirs(f'../{subdirectory_name}/downloads')
     except:
         pass
     try:
-        os.makedirs("../dbfs")
+        os.makedirs(f'../{subdirectory_name}/dbfs')
     except:
         pass
     try:
-        os.makedirs("../csvs")
+        os.makedirs(f'../{subdirectory_name}/csvs')
     except:
         pass
     try:
-        os.makedirs("../finalcsvs")
+        os.makedirs(f'../{subdirectory_name}/finalcsvs')
     except:
         pass
     try:
-        os.makedirs("../laudos")
+        os.makedirs(f'../{subdirectory_name}/laudos')
     except:
         pass
 
 
-def unite_files():
-    laudo_final.main()
+def unite_files(subdirectory_name: str):
+    print("vai funcionar ⛪️")
+    laudo_final.main(subdirectory_name)
 
 
 
-def file_was_already_dowloaded(file_name: str) -> bool:
-    return os.path.exists(f"../downloads/{file_name}")
+def file_was_already_dowloaded(file_name: str, subdirectory_name: str) -> bool:
+    return os.path.exists(f"../{subdirectory_name}/downloads/{file_name}")
 
 
 def dowload_from_ftp(ftp_server: str, remote_path: str, local_dir: str):
@@ -198,45 +215,31 @@ def dowload_from_ftp(ftp_server: str, remote_path: str, local_dir: str):
         return
 
 
-def create_pdf_from_csv(source_file_path: str, output_file_path: str):
-    csv = pd.read_csv(source_file_path, encoding='latin-1')
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font('helvetica', size=8)
-    pdf.cell(200, 10, txt="Laudo Do AvogaSUS", align='C')
-    pdf.ln()
-    pdf.set_font('helvetica', size=4)
-    for collumn in list(csv.columns):
-        pdf.cell(24, 10, txt=str(collumn)[:20], border=1)
-    pdf.ln()
-    for index, row in csv.iterrows():
-        for item in row:
-            pdf.cell(24, 10, txt=str(item)[:20], border=1)
-        pdf.ln()
-
-    pdf.output(output_file_path)
-
-
 def sigtap(data: str):
     print("Carregando arquivos sigtap")
-    arquivo_mais_recente = sigtap_procedimento.arquivos_procedimentos_ftp(f'{data}')
+    arquivo_mais_recente = sigtap_procedimento.arquivos_procedimentos_ftp(f'{data}') #------------
 
     if not arquivo_mais_recente:
         print("Nenhum arquivo correspondente foi encontrado.")
         return
 
     print("Arquivos de descrição e origem")
-    os.system(f"../exes/unzip {arquivo_mais_recente} ../dados")
-
+    err = os.system(f"../exes/unzip ../dados/{arquivo_mais_recente} ../dados")
+    if (err != 0):
+        print(f'erro ao descompactar {arquivo_mais_recente}')
+        exit(0)
+    
     sigtap_procedimento.descricao_procedimento('../dados/tb_procedimento.txt', '../dados/desc_procedimento.csv')
     sigtap_procedimento.origem_sia_sih('../dados/rl_procedimento_sia_sih.txt', '../dados/origem_sia_sih.csv')
 
     print("Conversão concluída com sucesso!")
 
+
 def dowload_e_processamento(file_and_cnes: list[str]):
     file = file_and_cnes[0]
     cnes = file_and_cnes[1]
     sih_sia = file_and_cnes[2]
+    subdirectory_name = file_and_cnes[3]
     fileName = os.path.split(file)[1]
 
     try:
@@ -245,21 +248,22 @@ def dowload_e_processamento(file_and_cnes: list[str]):
         print(f"a data do arquivo {file} parece não estar em conformidade com o padrão esperado")
         return
 
-    if not file_was_already_dowloaded(fileName):
+    if not file_was_already_dowloaded(fileName, subdirectory_name):
         print(f"Dowload de {file}...")
-        dowload_from_ftp("ftp.datasus.gov.br", file, "../downloads/")
+        dowload_from_ftp("ftp.datasus.gov.br", file, f"../{subdirectory_name}/downloads/")
 
     print("Conversão para dbf...")
-    os.system(f"../exes/blast-dbf ../downloads/{fileName} ../dbfs/{fileName[:-4]}.dbf")
+    os.system(f"../exes/blast-dbf ../{subdirectory_name}/downloads/{fileName} ../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf")
 
     print("Conversão para csv...")
-    os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv {cnes} {sys.argv[1]}")
+    os.system(f"../exes/DBF2CSV ../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf ../{subdirectory_name}/csvs/{fileName[:-4]}.csv {cnes} {sys.argv[1]}")
 
     print("Processando dados do csv por cnes...")
 
     if (sih_sia == 'SIA'):
-        processar_dados_sia.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
+        processar_dados_sia.processar_dados_csv(f"../{subdirectory_name}/csvs/{fileName[:-4]}.csv", f"../{subdirectory_name}/finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
     else:
-        processar_dados_sih.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
+        processar_dados_sih.processar_dados_csv(f"../{subdirectory_name}/csvs/{fileName[:-4]}.csv", f"../{subdirectory_name}/finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
+
 
 main()

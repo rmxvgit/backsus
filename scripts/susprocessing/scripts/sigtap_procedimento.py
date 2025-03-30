@@ -22,7 +22,7 @@ def arquivos_procedimentos_ftp(data):
 
         arquivo_mais_recente = arquivos_filtrados[-1]
 
-        with open(arquivo_mais_recente, 'wb') as file:
+        with open(f'../dados/{arquivo_mais_recente}', 'wb') as file:
             ftp.retrbinary(f'RETR {arquivo_mais_recente}', file.write)
 
         print(f'Download concluído: {arquivo_mais_recente}')

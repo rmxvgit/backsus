@@ -61,6 +61,7 @@ scripts/susprocessing/csvs
 scripts/susprocessing/downloads
 scripts/susprocessing/finalcsvs
 scripts/susprocessing/dbfs
+scripts/susprocessing/H*
 scripts/susprocessing/scripts/__pycache__
 
 # DataBase
