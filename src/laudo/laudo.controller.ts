@@ -1,15 +1,6 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { LaudoService } from './laudo.service';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
-import { UpdateLaudoDto } from './dto/update-laudo.dto';
 
 @Controller('laudo')
 export class LaudoController {
@@ -21,18 +12,18 @@ export class LaudoController {
   }
 
   @Get()
-  findAll() {
-    return this.laudoService.findAll();
+  async findAll() {
+    return await this.laudoService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.laudoService.findOne(+id);
+  @Get('hospital:cnes')
+  findByCnes(@Param('cnes') cnes: string) {
+    return this.laudoService.findByCnes(+cnes);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateLaudoDto: UpdateLaudoDto) {
-    return this.laudoService.update(+id, updateLaudoDto);
+  @Get('id:id')
+  async findById(@Param('id') id: string) {
+    return await this.laudoService.findById(+id);
   }
 
   @Delete(':id')

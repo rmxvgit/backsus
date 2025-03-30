@@ -16,6 +16,7 @@ datasource db {
 model Hospital {
   cnes   Int     @id
   name   String
+  estado String
   laudos Laudo[]
 }
 
@@ -25,6 +26,7 @@ model Laudo {
   hospitalCnes Int
   start        String
   end          String
+  estado       String
   fileName     String   @unique
   ready        Boolean
 }
