@@ -124,7 +124,7 @@ def find_files_of_interest(estado: str, data_inicio: Tdata, data_fim: Tdata, sih
     return files
 
 def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_sih: str, cnes: str):
-    if (sia_sih == 'BOTH'): #caso especial no qual os dois sistemas são selecionados
+    if (sia_sih == 'BOTH'):  # caso especial no qual os dois sistemas são selecionados
         get_and_process_data(estado, data_inicio, data_fim, 'SIA', cnes)
         get_and_process_data(estado, data_inicio, data_fim, 'SIH', cnes)
         return
@@ -135,8 +135,8 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
     print(f"Arquivos a serem baixados:\n{files_of_interest}")
 
     create_storage_folders()
-    
-    
+
+
 
     with Pool(10) as p:
         print([[file, cnes, sia_sih] for file in files_of_interest])
@@ -168,9 +168,9 @@ def create_storage_folders() -> None:
         pass
 
 
-def unite_files():    
+def unite_files():
     laudo_final.main()
-    
+
 
 
 def file_was_already_dowloaded(file_name: str) -> bool:
@@ -216,10 +216,11 @@ def create_pdf_from_csv(source_file_path: str, output_file_path: str):
 
     pdf.output(output_file_path)
 
-def sigtap(data:str):
+
+def sigtap(data: str):
     print("Carregando arquivos sigtap")
     arquivo_mais_recente = sigtap_procedimento.arquivos_procedimentos_ftp(f'{data}')
-    
+
     if not arquivo_mais_recente:
         print("Nenhum arquivo correspondente foi encontrado.")
         return
@@ -255,7 +256,7 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv {cnes} {sys.argv[1]}")
 
     print("Processando dados do csv por cnes...")
-    
+
     if (sih_sia == 'SIA'):
         processar_dados_sia.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
     else:

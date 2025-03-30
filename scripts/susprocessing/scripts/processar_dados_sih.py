@@ -49,7 +49,7 @@ def CarregaSelic() -> list[float]:
     today_str = get_day()
     print(today_str)
     url_bcb = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=csv&dataInicial=01/12/2021&dataFinal={today_str}"
-    selic = pd.read_csv(url_bcb, sep=";") 
+    selic = pd.read_csv(url_bcb, sep=";")
     selic['valor'] = selic['valor'].str.replace(",", ".").astype(float)
     selic['valor'] = (selic['valor']/100) + 1
     return selic['valor'].__array__()
@@ -76,7 +76,7 @@ def correcao_absoluta(data_inicio: Tdata, data_fim: Tdata, selic_arr: list[float
 
 
 
-def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: dict[str, int], data_fim: dict[str, int]):
+def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: Tdata, data_fim: Tdata):
     selic_arr = CarregaSelic()
     taxa_de_correcao_para_esse_mes = correcao_absoluta(data_inicio, data_fim, selic_arr)
 
@@ -90,7 +90,7 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: 
 
     df_filt = df_filt[df_filt['SP_QTD_ATO'] > 0]
     # df_filt = df_filt[df_filt['SP_VALATO'] > 0]
-    
+
     df_sum = df_filt.groupby(['SP_AA', 'SP_MM', 'SP_ATOPROF'],  as_index=False).agg({'SP_VALATO': 'sum', 'SP_QTD_ATO': 'sum'})
     df_sum = df_sum.sort_values(by='SP_ATOPROF')
 
@@ -106,13 +106,13 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: 
     df_tunep['TP_PROCEDIMENTO'] = df_tunep['TP_PROCEDIMENTO'] == 'H'
     df_tunep['CO_PROCEDIMENTO'] = df_tunep['CO_PROCEDIMENTO'].astype(str)
     df_desc = pd.merge(df_desc, df_tunep, on='CO_PROCEDIMENTO', how='left').fillna(0)
-    
+
     df_desc['ValorTUNEP'] = pd.to_numeric(df_desc['ValorTUNEP'].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
     comp_valor = df_desc['SP_QTD_ATO'] * df_desc['ValorTUNEP']
     df_desc['IVR/Tunep'] = np.where(comp_valor > df_desc['IVR'], comp_valor, df_desc['IVR'])
     df_desc['correcao'] = df_desc['IVR/Tunep'] * (taxa_de_correcao_para_esse_mes -1)
     df_desc['Total'] = df_desc['IVR/Tunep'] * taxa_de_correcao_para_esse_mes
-    
+
     df_desc['CO_PROCEDIMENTO'] = df_desc['CO_PROCEDIMENTO'].astype(str).str.zfill(10)
     df_desc['CO_PROCEDIMENTO'] = df_desc['CO_PROCEDIMENTO'].str[:2] + "." + df_desc['CO_PROCEDIMENTO'].str[2:4] + "." + df_desc['CO_PROCEDIMENTO'].str[4:6] + "." + df_desc['CO_PROCEDIMENTO'].str[6:9] + "-" + df_desc['CO_PROCEDIMENTO'].str[9]
     df_desc["Mês/Ano"] = df_desc["SP_MM"].astype(str).str.zfill(2) + "/" + df_desc["SP_AA"].astype(str)
@@ -151,5 +151,5 @@ def main():
 
     data_inicio = to_time(sys.argv[3])
     data_fim = get_current_data() #TODO: passar dados por parâmetro assim como para data_início
-    
+
     processar_dados_csv(csv_file_path, output_file_path, data_inicio, data_fim)
