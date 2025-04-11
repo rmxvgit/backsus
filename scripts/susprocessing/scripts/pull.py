@@ -170,9 +170,7 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
     print(f"processando {sia_sih}:")
 
     files_of_interest = find_files_of_interest(estado, data_inicio, data_fim, sia_sih)
-    print(f"Arquivos a serem baixados:\n{files_of_interest}")
-
-    create_storage_folders(subdirectory_name)
+    print(f"Arquivos a serem baixados:\n{files_of_interest}") 
 
 
     with Pool(10) as p:
@@ -296,8 +294,8 @@ def dowload_e_processamento(file_and_cnes: list[str]):
         processar_dados_sih.processar_dados_csv(csv_path, final_csv_path, start_time, Tdata.current_data())
         
     print(f"removendo ../{subdirectory_name}/downloads/{fileName}")
-    os.remove(f"../{subdirectory_name}/downloads/{fileName}")
+    os.remove(download_path)
 
     print(f"removendo ../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf")
-    os.remove(f"../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf")
+    os.remove(dbf_path)
 main()

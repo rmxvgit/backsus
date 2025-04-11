@@ -2,7 +2,6 @@
 import csv
 import logging
 import os
->>>>>>> f19881e (tanta coisa q nem sei =))
 from ftplib import FTP
 from pathlib import Path
 
