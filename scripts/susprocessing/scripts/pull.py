@@ -32,7 +32,7 @@ search_prefix = {
 def main():
     python_file = sys.argv[0]
     python_file_dir = os.path.dirname(python_file)
-    # os.chdir(python_file_dir)
+    os.chdir(python_file_dir)
 
     args = sys.argv[1:]
     if not validate_args(args): return
@@ -51,7 +51,6 @@ def main():
     sigtap(Tdata.data_atual_aaaamm())
     get_and_process_data(estado, data_inicio, data_fim, sistema, cnes, subdirectory_name)
     unite_files(subdirectory_name)
-
 
 def create_subdirectory(cnes: str, estado: str):
     subdirectory_name = f'H{cnes}{estado}'
@@ -140,8 +139,8 @@ def find_files_of_interest(estado: str, data_inicio: Tdata, data_fim: Tdata, sih
 
 def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_sih: str, cnes: str, subdirectory_name: str):
     if (sia_sih == 'BOTH'):  # caso especial no qual os dois sistemas são selecionados
-        get_and_process_data(estado, data_inicio, data_fim, 'SIA', cnes)
-        get_and_process_data(estado, data_inicio, data_fim, 'SIH', cnes)
+        get_and_process_data(estado, data_inicio, data_fim, 'SIA', cnes, subdirectory_name)
+        get_and_process_data(estado, data_inicio, data_fim, 'SIH', cnes, subdirectory_name)
         return
 
     print(f"processando {sia_sih}:")
@@ -228,7 +227,7 @@ def sigtap(data: str):
     if (err != 0):
         print(f'erro ao descompactar {arquivo_mais_recente}')
         exit(0)
-    
+
     sigtap_procedimento.descricao_procedimento('../dados/tb_procedimento.txt', '../dados/desc_procedimento.csv')
     sigtap_procedimento.origem_sia_sih('../dados/rl_procedimento_sia_sih.txt', '../dados/origem_sia_sih.csv')
 
@@ -256,7 +255,7 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     os.system(f"../exes/blast-dbf ../{subdirectory_name}/downloads/{fileName} ../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf")
 
     print("Conversão para csv...")
-    os.system(f"../exes/DBF2CSV ../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf ../{subdirectory_name}/csvs/{fileName[:-4]}.csv {cnes} {sys.argv[1]}")
+    os.system(f"../exes/DBF2CSV ../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf ../{subdirectory_name}/csvs/{fileName[:-4]}.csv {cnes} {sih_sia}")
 
     print("Processando dados do csv por cnes...")
 
@@ -265,5 +264,10 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     else:
         processar_dados_sih.processar_dados_csv(f"../{subdirectory_name}/csvs/{fileName[:-4]}.csv", f"../{subdirectory_name}/finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
 
+    print(f"removendo ../{subdirectory_name}/downloads/{fileName}")
+    os.remove(f"../{subdirectory_name}/downloads/{fileName}")
+
+    print(f"removendo ../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf")
+    os.remove(f"../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf")
 
 main()
