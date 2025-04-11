@@ -2,6 +2,7 @@ import ftplib as ftp
 import os
 import sys
 from multiprocessing.dummy import Pool
+from pathlib import Path
 
 import laudo_final
 import pandas as pd
@@ -12,7 +13,7 @@ from tempo import Tdata
 
 # python3 pull.py SIA RS 01-24 01-24 2248328
 # TODO: criar forma de conferir se os arquivos foram baixados na íntegra
-# TODO: criar separação de pastas por hospital
+# TODO: criar separação de pastas por hospital ok 
 # TODO: descobir como exportar pdf para o front end
 # TODO: reorganizar o codigo para carregar os arquivos sigtap uma vez ao mês, fazer o mesmo para o arquivo da selic
 
@@ -30,63 +31,85 @@ search_prefix = {
 # python pull.py <SIA/SIH> <estado>TabelaUnificada_202503_v2503101901.zip <data-inicio> <data-fim> <CNES>
 
 def main():
-    python_file = sys.argv[0]
-    python_file_dir = os.path.dirname(python_file)
-    os.chdir(python_file_dir)
+    try:
+        verify_dependencies()
+        python_file = sys.argv[0]
+        python_file_dir = os.path.dirname(python_file)
+        # os.chdir(python_file_dir)
 
-    args = sys.argv[1:]
-    if not validate_args(args): return
-    print(args)
+        args = sys.argv[1:]
+        if not validate_args(args): return
+        print(args)
 
-    sistema = args[0]
-    estado = args[1]
-    data_inicio = Tdata.str_to_data(args[2])
-    data_fim = Tdata.str_to_data(args[3])
-    cnes = args[4]
+        sistema = args[0]
+        estado = args[1]
+        data_inicio = Tdata.str_to_data(args[2])
+        data_fim = Tdata.str_to_data(args[3])
+        cnes = args[4]
 
-    subdirectory_name = create_subdirectory(cnes, estado)
-    verify_existence_of_dbc2dbf_converter()
-    verify_existence_of_dbf2csv_converter()
-    verify_existence_of_unzip_program()
-    sigtap(Tdata.data_atual_aaaamm())
-    get_and_process_data(estado, data_inicio, data_fim, sistema, cnes, subdirectory_name)
-    unite_files(subdirectory_name)
+        subdirectory_name = create_subdirectory(cnes, estado)
+        if not sigtap(Tdata.data_atual_aaaamm()):
+            print("AVISO: Não foi possível carregar arquivos SIGTAP")
+        get_and_process_data(estado, data_inicio, data_fim, sistema, cnes, subdirectory_name)
+        unite_files(subdirectory_name)
+        
+    except Exception as e:
+        print(f"ERRO CRÍTICO: {str(e)}", file=sys.stderr)
+        sys.exit(1)    
+
+# Configuração absoluta de caminhos
+def get_base_dir():
+    """Retorna o diretório base absoluto do projeto"""
+    try:
+        return Path(__file__).parent.parent
+    except NameError:
+        return Path.cwd() / 'scripts' / 'susprocessing'
+
+BASE_DIR = get_base_dir()
+
+def get_path(*parts):
+    """Constrói caminhos absolutos de forma confiável"""
+    return str(BASE_DIR.joinpath(*parts))
+
+# Configuração de diretórios
+EXES_DIR = get_path('exes')
+DADOS_DIR = get_path('dados')
+SCRIPTS_DIR = get_path('scripts')
+
+# Verificação de dependências
+def verify_dependencies():
+    required = {
+        'blast-dbf': os.path.join(EXES_DIR, 'blast-dbf'),
+        'DBF2CSV': os.path.join(EXES_DIR, 'DBF2CSV'),
+        'unzip': os.path.join(EXES_DIR, 'unzip')
+    }
+    
+    missing = [name for name, path in required.items() if not os.path.exists(path)]
+    if missing:
+        raise FileNotFoundError(
+            f"Ferramentas necessárias não encontradas: {', '.join(missing)}\n"
+            f"Por favor, instale em {EXES_DIR}"
+        )
 
 def create_subdirectory(cnes: str, estado: str):
     subdirectory_name = f'H{cnes}{estado}'
-    try:
-        os.mkdir(f'../{subdirectory_name}')
-    except FileExistsError:
-        pass
+    subdirectory_path = get_path(subdirectory_name)
+    
+    os.makedirs(subdirectory_path, exist_ok=True)
+    os.makedirs(get_path(subdirectory_name, 'downloads'), exist_ok=True)
+    os.makedirs(get_path(subdirectory_name, 'dbfs'), exist_ok=True)
+    os.makedirs(get_path(subdirectory_name, 'csvs'), exist_ok=True)
+    os.makedirs(get_path(subdirectory_name, 'finalcsvs'), exist_ok=True)
+    os.makedirs(get_path(subdirectory_name, 'laudos'), exist_ok=True)
+    
     return subdirectory_name
-
-# verifica a existência do conversor e, caso ele não exista, compila o conversor
-def verify_existence_of_dbf2csv_converter():
-    if os.path.exists("../exes/DBF2CSV"):
-        return
-    else:
-        # TODO:
-        pass
-
-# verifica a existência do conversor e, caso ele não exista, compila o conversor
-def verify_existence_of_dbc2dbf_converter():
-    if os.path.exists("../exes/DBF2CSV"):
-        return
-    else:
-        # TODO:
-        pass
-
-def verify_existence_of_unzip_program():
-    if os.path.exists("../exes/unzip"):
-        return
-    else:
-        # TODO:
-        pass
 
 def validate_args(args: list[str]) -> bool:
     if len(args) != 5:
         print("Número de argumentos fornecidos é inválido")
         return False
+
+    
     if args[0] not in ['SIA', 'SIH', 'BOTH']:
         print("sistema inválido:", args[0])
         return False
@@ -103,7 +126,8 @@ def validate_args(args: list[str]) -> bool:
     try:
         data_fim = Tdata.str_to_data(args[3])
     except:
-        print(f"data de início em um formato inválido: {args[2]}")
+        print(f"data de final em um formato inválido: {args[2]}")
+
 
     if data_fim < data_inicio:
         print("Data de início maior que data de fim")
@@ -151,88 +175,89 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
     create_storage_folders(subdirectory_name)
 
 
-
     with Pool(10) as p:
         print([[file, cnes, sia_sih, subdirectory_name] for file in files_of_interest])
         p.map(dowload_e_processamento, [[file, cnes, sia_sih, subdirectory_name] for file in files_of_interest])
 
 
-
-
-def create_storage_folders(subdirectory_name: str) -> None:
-    print(f'{subdirectory_name}\n\n\n')
-    try:
-        os.makedirs(f'../{subdirectory_name}/downloads')
-    except:
-        pass
-    try:
-        os.makedirs(f'../{subdirectory_name}/dbfs')
-    except:
-        pass
-    try:
-        os.makedirs(f'../{subdirectory_name}/csvs')
-    except:
-        pass
-    try:
-        os.makedirs(f'../{subdirectory_name}/finalcsvs')
-    except:
-        pass
-    try:
-        os.makedirs(f'../{subdirectory_name}/laudos')
-    except:
-        pass
-
-
 def unite_files(subdirectory_name: str):
-    print("vai funcionar ⛪️")
-    laudo_final.main(subdirectory_name)
+    print("Unindo arquivos para gerar laudo final...")
+    try:
+        #Usando get_path para garantir que o caminho seja absoluto =)
+        csv_dir = get_path(subdirectory_name, 'finalcsvs')
+        laudos_dir = get_path(subdirectory_name, 'laudos')
+        if not os.path.exists(csv_dir):
+            raise FileNotFoundError(f"Diretório não encontrado: {csv_dir}")
+            
+        laudo_final.main(csv_dir, laudos_dir)
+    except Exception as e:
+        print(f"Erro ao unir arquivos: {str(e)}")
+        raise
 
 
-
-def file_was_already_dowloaded(file_name: str, subdirectory_name: str) -> bool:
-    return os.path.exists(f"../{subdirectory_name}/downloads/{file_name}")
+def file_was_already_downloaded(file_path: str) -> bool:
+    return os.path.exists(file_path)
 
 
 def dowload_from_ftp(ftp_server: str, remote_path: str, local_dir: str):
     try:
-        print("Iniciando o download de", remote_path)
+        print(f"Iniciando download de {remote_path}")
         remote_dir, remote_file = os.path.split(remote_path)
-        local_file = os.path.join(local_dir, remote_file)
+        
         if not os.path.exists(local_dir):
             os.makedirs(local_dir)
+            
+        local_file = os.path.join(local_dir, remote_file)
+        
         ftp_client = ftp.FTP(ftp_server)
         ftp_client.login()
         ftp_client.cwd(remote_dir)
+        
         with open(local_file, 'wb') as file:
-            ftp_client.retrbinary('RETR ' + remote_file, file.write)
+            ftp_client.retrbinary(f'RETR {remote_file}', file.write)
         ftp_client.quit()
         print(f"Download de {remote_file} concluído com sucesso.")
         return
-    except:
-        print("Erro ao fazer download", remote_path)
+    except Exception as e: 
+        print(f"Falha no download de {remote_path}: {str(e)}")
         print("É provável que o servidor do sus não esteja funcionando como esperado")
         return
 
 
 def sigtap(data: str):
-    print("Carregando arquivos sigtap")
-    arquivo_mais_recente = sigtap_procedimento.arquivos_procedimentos_ftp(f'{data}') #------------
+    try:
+        print("Carregando arquivos SIGTAP...")
+        arquivo_mais_recente = sigtap_procedimento.arquivos_procedimentos_ftp(data)
+        
+        if not arquivo_mais_recente:
+            print("Nenhum arquivo SIGTAP encontrado")
+            return False
 
-    if not arquivo_mais_recente:
-        print("Nenhum arquivo correspondente foi encontrado.")
-        return
+        zip_path = get_path('dados', arquivo_mais_recente)
+        
+        print(f"Extraindo {arquivo_mais_recente}...")
+        err = os.system(f"{get_path('exes', 'unzip')} {zip_path} {DADOS_DIR}")
+        if(err != 0):
+            print(f'erro ao descompactar {arquivo_mais_recente}')
+            return False
 
-    print("Arquivos de descrição e origem")
-    err = os.system(f"../exes/unzip ../dados/{arquivo_mais_recente} ../dados")
-    if (err != 0):
-        print(f'erro ao descompactar {arquivo_mais_recente}')
-        exit(0)
-
-    sigtap_procedimento.descricao_procedimento('../dados/tb_procedimento.txt', '../dados/desc_procedimento.csv')
-    sigtap_procedimento.origem_sia_sih('../dados/rl_procedimento_sia_sih.txt', '../dados/origem_sia_sih.csv')
-
-    print("Conversão concluída com sucesso!")
-
+        sigtap_procedimento.descricao_procedimento(
+            get_path('dados', 'tb_procedimento.txt'),
+            get_path('dados', 'desc_procedimento.csv')
+        )
+        
+        sigtap_procedimento.origem_sia_sih(
+            get_path('dados', 'rl_procedimento_sia_sih.txt'),
+            get_path('dados', 'origem_sia_sih.csv')
+        )
+        
+        print("Processamento SIGTAP concluído")
+        return True
+        
+    except Exception as e:
+        print(f"Erro no processamento SIGTAP: {str(e)}")
+        return False
+    
 
 def dowload_e_processamento(file_and_cnes: list[str]):
     file = file_and_cnes[0]
@@ -247,27 +272,32 @@ def dowload_e_processamento(file_and_cnes: list[str]):
         print(f"a data do arquivo {file} parece não estar em conformidade com o padrão esperado")
         return
 
-    if not file_was_already_dowloaded(fileName, subdirectory_name):
-        print(f"Dowload de {file}...")
-        dowload_from_ftp("ftp.datasus.gov.br", file, f"../{subdirectory_name}/downloads/")
+    
+    download_path = get_path(subdirectory_name, 'downloads', fileName)
+    dbf_path = get_path(subdirectory_name, 'dbfs', f"{fileName[:-4]}.dbf")
+    csv_path = get_path(subdirectory_name, 'csvs', f"{fileName[:-4]}.csv")
+    final_csv_path = get_path(subdirectory_name, 'finalcsvs', f"{fileName[:-4]}.csv")
+
+    if not file_was_already_downloaded(download_path):
+        print(f"Download de {file}...")
+        dowload_from_ftp("ftp.datasus.gov.br", file, os.path.dirname(download_path))
 
     print("Conversão para dbf...")
-    os.system(f"../exes/blast-dbf ../{subdirectory_name}/downloads/{fileName} ../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf")
+    os.system(f"{get_path('exes', 'blast-dbf')} {download_path} {dbf_path}")
 
     print("Conversão para csv...")
-    os.system(f"../exes/DBF2CSV ../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf ../{subdirectory_name}/csvs/{fileName[:-4]}.csv {cnes} {sih_sia}")
+    os.system(f"{get_path('exes', 'DBF2CSV')} {dbf_path} {csv_path} {cnes} {sih_sia}")
 
     print("Processando dados do csv por cnes...")
 
     if (sih_sia == 'SIA'):
-        processar_dados_sia.processar_dados_csv(f"../{subdirectory_name}/csvs/{fileName[:-4]}.csv", f"../{subdirectory_name}/finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
+        processar_dados_sia.processar_dados_csv(csv_path, final_csv_path, start_time, Tdata.current_data())
     else:
-        processar_dados_sih.processar_dados_csv(f"../{subdirectory_name}/csvs/{fileName[:-4]}.csv", f"../{subdirectory_name}/finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
-
+        processar_dados_sih.processar_dados_csv(csv_path, final_csv_path, start_time, Tdata.current_data())
+        
     print(f"removendo ../{subdirectory_name}/downloads/{fileName}")
     os.remove(f"../{subdirectory_name}/downloads/{fileName}")
 
     print(f"removendo ../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf")
     os.remove(f"../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf")
-
 main()

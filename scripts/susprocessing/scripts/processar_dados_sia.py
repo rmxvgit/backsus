@@ -1,6 +1,8 @@
 import math as m
+import os
 import sys
 import time as t
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,23 @@ from tempo import Tdata
 
 # essa tabela vai de maio do ano 2000 até novembro de 2021
 tabela_ipcae = [0.09,0.08,0.78,1.99,0.45,0.18,0.17,0.6,0.63,0.5,0.36,0.5,0.49,0.38,0.94,1.18,0.38,0.37,0.99,0.55,0.62,0.44,0.4,0.78,0.42,0.33,0.77,1,0.62,0.9,2.08,3.05,1.98,2.19,1.14,1.14,0.85,0.22,-0.18,0.27,0.57,0.66,0.17,0.46,0.68,0.9,0.4,0.21,0.54,0.56,0.93,0.79,0.49,0.32,0.63,0.84,0.68,0.74,0.35,0.74,0.83,0.12,0.11,0.28,0.16,0.56,0.78,0.38,0.51,0.52,0.37,0.17,0.27,-0.15,-0.02,0.19,0.05,0.29,0.37,0.35,0.52,0.46,0.41,0.22,0.26,0.29,0.24,0.42,0.29,0.24,0.23,0.7,0.7,0.64,0.23,0.59,0.56,0.9,0.63,0.35,0.26,0.3,0.49,0.29,0.4,0.63,0.11,0.36,0.59,0.38,0.22,0.23,0.19,0.18,0.44,0.38,0.52,0.94,0.55,0.48,0.63,0.19,-0.09,-0.05,0.31,0.62,0.86,0.69,0.76,0.97,0.6,0.77,0.7,0.23,0.1,0.27,0.53,0.42,0.46,0.56,0.65,0.53,0.25,0.43,0.51,0.18,0.33,0.39,0.48,0.65,0.54,0.69,0.88,0.68,0.49,0.51,0.46,0.38,0.07,0.16,0.27,0.48,0.57,0.75,0.67,0.7,0.73,0.78,0.58,0.47,0.17,0.14,0.39,0.48,0.38,0.79,0.89,1.33,1.24,1.07,0.6,0.99,0.59,0.43,0.39,0.66,0.85,1.18,0.92,1.42,0.43,0.51,0.86,0.4,0.54,0.45,0.23,0.19,0.26,0.19,0.31,0.54,0.15,0.21,0.24,0.16,-0.18,0.35,0.11,0.34,0.32,0.35,0.39,0.38,0.1,0.21,0.14,1.11,0.64,0.13,0.09,0.58,0.19,-0.16,0.3,0.34,0.54,0.72,0.35,0.06,0.09,0.08,0.09,0.09,0.14,1.05,0.71,0.22,0.02,-0.01,-0.59,0.02,0.3,0.23,0.45,0.94,0.81,1.06,0.78,0.48,0.93,0.6,0.44,0.83,0.72,0.89,1.14,1.2,1.17]
+
+
+def get_base_dir():
+    """Retorna o diretório base absoluto do projeto"""
+    try:
+        return Path(__file__).parent.parent
+    except NameError:
+        return Path.cwd() / 'scripts' / 'susprocessing'
+
+BASE_DIR = get_base_dir()
+
+def get_path(*parts):
+    """Constrói caminhos absolutos de forma confiável"""
+    return str(BASE_DIR.joinpath(*parts))
+
+# Configuração de diretórios
+DADOS_DIR = get_path('dados')
 
 def correcao_ipcae(data_inicio: Tdata, data_fim: Tdata):  # noqa: E501
     # TODO: validar as datas das entradas
@@ -52,7 +71,7 @@ def CarregaSelic() -> list[float]:
     print(today_str)
     url_bcb = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=csv&dataInicial=01/12/2021&dataFinal={today_str}"
     selic = pd.read_csv(url_bcb, sep=";") 
-    selic['valor'] = selic['valor'].str.replace(",", ".").astype(float)
+    selic['valor'] = selic['valor'].astype(str).str.replace(",", ".").astype(float)
     selic['valor'] = (selic['valor']/100) + 1
     return selic['valor'].__array__()
 
@@ -78,14 +97,14 @@ def correcao_absoluta(data_inicio: Tdata, data_fim: Tdata, selic_arr: list[float
 
 
 def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: Tdata, data_fim: Tdata):
-    # selic_arr = CarregaSelic()
-    taxa_de_correcao_para_esse_mes = 0.2 #correcao_absoluta(data_inicio, data_fim, selic_arr)
+    selic_arr = CarregaSelic()
+    taxa_de_correcao_para_esse_mes = correcao_absoluta(data_inicio, data_fim, selic_arr)
 
-    # porcentagem_de_correcao = (taxa_de_correcao_para_esse_mes - 1)*100
+    porcentagem_de_correcao = (taxa_de_correcao_para_esse_mes - 1)*100
 
     df_main = pd.read_csv(csv_file_path, encoding='utf-8-sig', low_memory=False)
-    df_proc = pd.read_csv("../dados/desc_procedimento.csv")
-    df_tunep = pd.read_csv("../dados/tabela_tunep_mais_origem.csv", encoding='utf-8-sig')
+    df_proc = pd.read_csv(get_path('dados', 'desc_procedimento.csv'))
+    df_tunep = pd.read_csv(get_path('dados', 'tabela_tunep_mais_origem.csv'))
 
     df_filt = df_main[['PA_CODUNI', 'PA_CMP', 'PA_PROC_ID', 'PA_QTDAPR', 'PA_VALPRO']]
 
@@ -100,7 +119,8 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: 
     df_desc = pd.merge(df_sum, df_proc, left_on='PA_PROC_ID', right_on='CO_PROCEDIMENTO', how='left')
     df_desc = df_desc[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'PA_CMP', 'PA_VALPRO', 'PA_QTDAPR']]
     
-    df_desc['PA_VALPRO'] = df_desc["PA_VALPRO"] * df_desc["PA_QTDAPR"] #aarumei
+
+    df_desc['PA_VALPRO'] = df_desc["PA_VALPRO"] * df_desc["PA_QTDAPR"]
     df_desc["IVR"] = df_desc["PA_VALPRO"] * 0.5
 
     df_desc['CO_PROCEDIMENTO'] = df_desc['CO_PROCEDIMENTO'].astype(str)

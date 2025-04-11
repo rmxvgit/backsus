@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
-import { LaudoService } from './laudo.service';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
+import { LaudoService } from './laudo.service';
 
 @Controller('laudo')
 export class LaudoController {

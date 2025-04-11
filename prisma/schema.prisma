@@ -21,12 +21,17 @@ model Hospital {
 }
 
 model Laudo {
-  id           Int      @id @default(autoincrement())
-  Hospital     Hospital @relation(fields: [hospitalCnes], references: [cnes])
-  hospitalCnes Int
-  start        String
-  end          String
-  estado       String
-  fileName     String   @unique
-  ready        Boolean
+  id              Int      @id @default(autoincrement())
+  Hospital        Hospital @relation(fields: [hospitalCnes], references: [cnes])
+  hospitalCnes    Int
+  start           String
+  end             String
+  estado          String
+  fileName        String   @unique
+  ready           Boolean
+  dataDistribuicao DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
+  numeroProcesso  String?
+  valorFinal      String?
 }

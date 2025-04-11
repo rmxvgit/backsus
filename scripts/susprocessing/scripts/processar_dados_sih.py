@@ -1,6 +1,13 @@
 import math as m
+<<<<<<< HEAD
 import sys
 import time as t
+=======
+import os
+import sys
+import time as t
+from pathlib import Path
+>>>>>>> f19881e (tanta coisa q nem sei =))
 
 import numpy as np
 import pandas as pd
@@ -50,7 +57,11 @@ def CarregaSelic() -> list[float]:
     print(today_str)
     url_bcb = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=csv&dataInicial=01/12/2021&dataFinal={today_str}"
     selic = pd.read_csv(url_bcb, sep=";")
+<<<<<<< HEAD
     selic['valor'] = selic['valor'].str.replace(",", ".").astype(float)
+=======
+    selic['valor'] = selic['valor'].astype(str).str.replace(",", ".").astype(float)
+>>>>>>> f19881e (tanta coisa q nem sei =))
     selic['valor'] = (selic['valor']/100) + 1
     return selic['valor'].__array__()
 
@@ -83,8 +94,13 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: 
     porcentagem_de_correcao = (taxa_de_correcao_para_esse_mes - 1)*100
 
     df_main = pd.read_csv(csv_file_path, encoding='utf-8-sig', low_memory=False)
+<<<<<<< HEAD
     df_proc = pd.read_csv("../dados/desc_procedimento.csv")
     df_tunep = pd.read_csv("../dados/tabela_tunep_mais_origem.csv", encoding='latin1')
+=======
+    df_proc = pd.read_csv(get_path('dados', 'desc_procedimento.csv'))
+    df_tunep = pd.read_csv(get_path('dados', 'tabela_tunep_mais_origem.csv'))
+>>>>>>> f19881e (tanta coisa q nem sei =))
 
     df_filt = df_main[['SP_AA', 'SP_MM', 'SP_VALATO', 'SP_ATOPROF', 'SP_QTD_ATO']]
 

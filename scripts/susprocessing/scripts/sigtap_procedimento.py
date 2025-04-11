@@ -1,6 +1,8 @@
 # ftp_utils.py
 import csv
 import logging
+import os
+>>>>>>> f19881e (tanta coisa q nem sei =))
 from ftplib import FTP
 from pathlib import Path
 
@@ -8,7 +10,25 @@ import pandas as pd
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def arquivos_procedimentos_ftp(data):
+#TODO: arrumar uma maneira de puxar os arquivos somente uma vez ao mes =)
+
+def get_base_dir():
+    """Retorna o diretório base absoluto do projeto"""
+    try:
+        return Path(__file__).parent.parent
+    except NameError:
+        return Path.cwd() / 'scripts' / 'susprocessing'
+
+BASE_DIR = get_base_dir()
+
+def get_path(*parts):
+    """Constrói caminhos absolutos de forma confiável"""
+    return str(BASE_DIR.joinpath(*parts))
+
+# Configuração de diretórios
+DADOS_DIR = get_path('dados')
+
+def arquivos_procedimentos_ftp(data: str):
     ftp = FTP('ftp2.datasus.gov.br')
     ftp.login()
     ftp.cwd('/public/sistemas/tup/downloads/')
@@ -22,7 +42,9 @@ def arquivos_procedimentos_ftp(data):
 
         arquivo_mais_recente = arquivos_filtrados[-1]
 
-        with open(f'../dados/{arquivo_mais_recente}', 'wb') as file:
+        zip_path = get_path('dados', arquivo_mais_recente)
+
+        with open(f'{zip_path}', 'wb') as file:
             ftp.retrbinary(f'RETR {arquivo_mais_recente}', file.write)
 
         print(f'Download concluído: {arquivo_mais_recente}')
@@ -78,21 +100,31 @@ def origem_sia_sih(input_file, output_file):
 
 
 def origem_mais_tunep():
-    origem = pd.read_csv("../dados/origem_sia_sih.csv")
-    tunep = pd.read_csv("../dados/TUNEP.csv", encoding='utf-8-sig')
+    origem = pd.read_csv(get_path('dados', 'origem_sia_sih.csv'))
+    tunep = pd.read_csv(get_path('dados', 'TUNEP.csv'), encoding='utf-8-sig')
 
     origem['CO_PROCEDIMENTO'] = origem['CO_PROCEDIMENTO'].astype(str)
     origem['CO_PROCEDIMENTO_SIA_SIH'] = origem['CO_PROCEDIMENTO_SIA_SIH'].astype(str)
     tunep['Codigo'] = tunep['Codigo'].astype(str)
 
-    tunep_mais_origem = pd.merge(origem, tunep, left_on='CO_PROCEDIMENTO_SIA_SIH',right_on='Codigo', how='outer').fillna(0)
+    tunep_mais_origem = pd.merge(origem, tunep, left_on='CO_PROCEDIMENTO_SIA_SIH', right_on='Codigo', how='outer').fillna(0)
 
     tunep_mais_origem = tunep_mais_origem[tunep_mais_origem['ValorTUNEP'] != 0]
-
     tunep_mais_origem = tunep_mais_origem[tunep_mais_origem['TP_PROCEDIMENTO'] != 0]
 
-    tunep_mais_origem= tunep_mais_origem[['CO_PROCEDIMENTO', 'Descricao' ,'ValorTUNEP', 'TP_PROCEDIMENTO']]
+    tunep_mais_origem['ValorTUNEP'] = tunep_mais_origem['ValorTUNEP'].str.replace('.', '').str.replace(',', '.').astype(float)
 
-    print(tunep_mais_origem) #apagar dps =)
+    tunep_mais_origem = tunep_mais_origem.loc[
+        tunep_mais_origem.groupby(['CO_PROCEDIMENTO', 'TP_PROCEDIMENTO'])['ValorTUNEP'].idxmax()
+    ]
 
-    tunep_mais_origem.to_csv("../dados/tabela_tunep_mais_origem.csv", index=False)
+    tunep_mais_origem = tunep_mais_origem.sort_values(by='CO_PROCEDIMENTO')
+
+    tunep_mais_origem = tunep_mais_origem[['CO_PROCEDIMENTO', 'Descricao', 'ValorTUNEP', 'TP_PROCEDIMENTO']]
+
+    tunep_mais_origem['ValorTUNEP'] = tunep_mais_origem['ValorTUNEP'].apply(
+        lambda x: f"{x:,.2f}".replace('.', '|').replace(',', '.').replace('|', ',')
+    )
+
+    tunep_mais_origem.to_csv(get_path('dados', 'tabela_tunep_mais_origem.csv'), index=False)
+    
