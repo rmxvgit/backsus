@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { exec, execSync } from 'child_process';
+import { exec, ExecException, execSync } from 'child_process';
 import {
   accessSync,
   constants,
@@ -13,13 +13,21 @@ import {
 import { join } from 'path';
 import { PrismaService } from 'src/prisma.service';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
-import { exit } from 'process';
+
+interface LaudoEntityCreationOutput {
+  id: number;
+  estado: string;
+  start: string;
+  hospitalCnes: number;
+  end: string;
+}
 
 @Injectable()
 export class LaudoService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateLaudoDto) { 
+  async create(dto: CreateLaudoDto) {
+    console.log('Requisição de criação de laudo:');
 
     const cnes_number = parseInt(dto.cnes);
     const laudoName = `laudo${dto.cnes}${dto.estado}${dto.data_inicio}${dto.data_fim}`;
@@ -27,13 +35,14 @@ export class LaudoService {
 
     // Cria diretório se não existir
     if (!existsSync(laudosDir)) {
+      console.log('Criando diretório de laudos:');
       mkdirSync(laudosDir, { recursive: true });
     }
 
     // Verifica permissões de escrita
     try {
       accessSync(laudosDir, constants.W_OK);
-    } catch (e) {
+    } catch {
       throw new Error(`Sem permissão para escrever no diretório ${laudosDir}`);
     }
 
@@ -51,12 +60,12 @@ export class LaudoService {
         : undefined,
     };
 
-    let laudo_output;
+    let laudo_output: LaudoEntityCreationOutput;
     try {
       laudo_output = await this.prisma.laudo.create({
         data: laudo_input,
       });
-    } catch (error) {
+    } catch {
       try {
         // Se já existir, atualiza para ready: false
         laudo_output = await this.prisma.laudo.update({
@@ -64,82 +73,94 @@ export class LaudoService {
           data: { ready: false },
         });
       } catch {
-        throw new Error(
-          'Erro ao criar/atualizar registro do laudo no banco de dados',
-        );
+        throw new Error('Erro ao criar/atualizar laudo na db');
       }
     }
 
+    const python_process_result = async (
+      error: ExecException | null,
+      stdout: string,
+      stderr: string,
+    ) => {
+      // Se der erro, erre
+      if (error) {
+        console.error('O SCRIPT DE PROCESSAMENTO FALHOU!!!');
+        console.error('LOG DO SCRIPT: --------------------');
+        console.log(stdout, stderr);
+
+        console.log('Removendo laudo do banco de dados:');
+
+        this.prisma.laudo
+          .delete({
+            where: { id: laudo_output.id },
+          })
+          .then(() => {
+            console.log('Laudo removido do banco de dados.');
+          })
+          .catch(() => {
+            console.error('Erro ao remover laudo do banco de dados.');
+          });
+        return;
+      }
+
+      let pdf_generation_result: string;
+
+      // tenta gerar o pdf
+      try {
+        pdf_generation_result = await this.generatePdf(
+          dto,
+          laudoName,
+          laudosDir,
+        );
+      } catch (pdfError) {
+        // se não conseguir gerar o pdf, relata o problema,
+        // apaga o laudo do banco de dados e retorna
+        console.error('Erro durante geração do PDF:', pdfError);
+        const pdfPath = join(laudosDir, `${laudoName}.pdf`);
+        const errorMessage = existsSync(pdfPath)
+          ? 'PDF foi gerado mas ocorreram warnings'
+          : 'Falha na geração do PDF';
+        console.log(errorMessage);
+
+        this.prisma.laudo
+          .delete({
+            where: { id: laudo_output.id },
+          })
+          .then(() => {
+            console.log('Laudo removido do banco de dados.');
+          })
+          .catch(() => {
+            console.error('Erro ao remover laudo do banco de dados.');
+          });
+        return;
+      }
+
+      // Se nada tiver dado errado, Atualiza o laudo com ready: true e o valorFinal
+      this.prisma.laudo
+        .update({
+          where: { id: laudo_output.id },
+          data: {
+            ready: true,
+            valorFinal: pdf_generation_result,
+          },
+        })
+        .catch(() => {
+          throw new Error('Erro ao atualizar o laudo na db.');
+        });
+    };
+
     // Executa o script Python para processar os dados
-    return new Promise((resolve, reject) => {
-      exec(
-        `python3 scripts/susprocessing/scripts/pull.py SIA ${dto.estado} ${dto.data_inicio} ${dto.data_fim} ${dto.cnes}`,
-        async (error, stdout, stderr) => {
-          if (error) {
-            console.error('O script de processamento de dados falhou');
-            console.log(stdout, stderr);
-
-            try {
-              await this.prisma.laudo.delete({
-                where: { id: laudo_output.id },
-              });
-              reject(
-                new Error('Falha no processamento dos dados - laudo removido'),
-              );
-            } catch (deleteError) {
-              reject(
-                new Error(
-                  'Falha no processamento dos dados e não foi possível remover o laudo',
-                ),
-              );
-            }
-            return;
-          }
-
-          try {
-            // Se o script Python rodou com sucesso, gera o PDF
-            const valorFinal = await this.generatePdf(
-              dto,
-              laudoName,
-              laudosDir,
-            );
-
-            // Atualiza o laudo com ready: true e o valorFinal
-            await this.prisma.laudo.update({
-              where: { id: laudo_output.id },
-              data: {
-                ready: true,
-                valorFinal: valorFinal,
-              },
-            });
-
-            resolve({
-              success: true,
-              laudoId: laudo_output.id,
-              fileName: laudoName,
-              valorFinal: valorFinal,
-            });
-          } catch (pdfError) {
-            console.error('Erro durante geração do PDF:', pdfError);
-            const pdfPath = join(laudosDir, `${laudoName}.pdf`);
-            const errorMessage = existsSync(pdfPath)
-              ? 'PDF foi gerado mas ocorreram warnings'
-              : 'Falha na geração do PDF';
-
-            try {
-              await this.prisma.laudo.delete({
-                where: { id: laudo_output.id },
-              });
-              reject(new Error(`${errorMessage} - laudo removido`));
-            } catch (deleteError) {
-              reject(
-                new Error(`${errorMessage} e não foi possível remover o laudo`),
-              );
-            }
-          }
-        },
-      );
-    });
+    exec(
+      `python3 scripts/susprocessing/scripts/pull.py SIA ${dto.estado} ${dto.data_inicio} ${dto.data_fim} ${dto.cnes}`,
+      (error, stdout, stderr) => {
+        python_process_result(error, stdout, stderr).then(
+          () => {
+            console.log('cabou');
+          },
+          () => {},
+        );
+      },
+    );
   }
 
   private async generatePdf(
