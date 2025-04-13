@@ -1,3 +1,5 @@
+# flake8: noqa
+
 import ftplib as ftp
 import os
 import sys
@@ -5,7 +7,6 @@ from multiprocessing.dummy import Pool
 from pathlib import Path
 
 import laudo_final
-import pandas as pd
 import processar_dados_sia
 import processar_dados_sih
 import sigtap_procedimento
@@ -13,7 +14,7 @@ from tempo import Tdata
 
 # python3 pull.py SIA RS 01-24 01-24 2248328
 # TODO: criar forma de conferir se os arquivos foram baixados na íntegra
-# TODO: criar separação de pastas por hospital ok 
+# TODO: criar separação de pastas por hospital ok
 # TODO: descobir como exportar pdf para o front end
 # TODO: reorganizar o codigo para carregar os arquivos sigtap uma vez ao mês, fazer o mesmo para o arquivo da selic
 
@@ -52,10 +53,10 @@ def main():
             print("AVISO: Não foi possível carregar arquivos SIGTAP")
         get_and_process_data(estado, data_inicio, data_fim, sistema, cnes, subdirectory_name)
         unite_files(subdirectory_name)
-        
+
     except Exception as e:
         print(f"ERRO CRÍTICO: {str(e)}", file=sys.stderr)
-        sys.exit(1)    
+        sys.exit(1)
 
 # Configuração absoluta de caminhos
 def get_base_dir():
@@ -83,7 +84,7 @@ def verify_dependencies():
         'DBF2CSV': os.path.join(EXES_DIR, 'DBF2CSV'),
         'unzip': os.path.join(EXES_DIR, 'unzip')
     }
-    
+
     missing = [name for name, path in required.items() if not os.path.exists(path)]
     if missing:
         raise FileNotFoundError(
@@ -94,14 +95,14 @@ def verify_dependencies():
 def create_subdirectory(cnes: str, estado: str):
     subdirectory_name = f'H{cnes}{estado}'
     subdirectory_path = get_path(subdirectory_name)
-    
+
     os.makedirs(subdirectory_path, exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'downloads'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'dbfs'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'csvs'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'finalcsvs'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'laudos'), exist_ok=True)
-    
+
     return subdirectory_name
 
 def validate_args(args: list[str]) -> bool:
@@ -109,7 +110,7 @@ def validate_args(args: list[str]) -> bool:
         print("Número de argumentos fornecidos é inválido")
         return False
 
-    
+
     if args[0] not in ['SIA', 'SIH', 'BOTH']:
         print("sistema inválido:", args[0])
         return False
@@ -170,7 +171,7 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
     print(f"processando {sia_sih}:")
 
     files_of_interest = find_files_of_interest(estado, data_inicio, data_fim, sia_sih)
-    print(f"Arquivos a serem baixados:\n{files_of_interest}") 
+    print(f"Arquivos a serem baixados:\n{files_of_interest}")
 
 
     with Pool(10) as p:
@@ -186,7 +187,7 @@ def unite_files(subdirectory_name: str):
         laudos_dir = get_path(subdirectory_name, 'laudos')
         if not os.path.exists(csv_dir):
             raise FileNotFoundError(f"Diretório não encontrado: {csv_dir}")
-            
+
         laudo_final.main(csv_dir, laudos_dir)
     except Exception as e:
         print(f"Erro ao unir arquivos: {str(e)}")
@@ -201,22 +202,22 @@ def dowload_from_ftp(ftp_server: str, remote_path: str, local_dir: str):
     try:
         print(f"Iniciando download de {remote_path}")
         remote_dir, remote_file = os.path.split(remote_path)
-        
+
         if not os.path.exists(local_dir):
             os.makedirs(local_dir)
-            
+
         local_file = os.path.join(local_dir, remote_file)
-        
+
         ftp_client = ftp.FTP(ftp_server)
         ftp_client.login()
         ftp_client.cwd(remote_dir)
-        
+
         with open(local_file, 'wb') as file:
             ftp_client.retrbinary(f'RETR {remote_file}', file.write)
         ftp_client.quit()
         print(f"Download de {remote_file} concluído com sucesso.")
         return
-    except Exception as e: 
+    except Exception as e:
         print(f"Falha no download de {remote_path}: {str(e)}")
         print("É provável que o servidor do sus não esteja funcionando como esperado")
         return
@@ -226,13 +227,13 @@ def sigtap(data: str):
     try:
         print("Carregando arquivos SIGTAP...")
         arquivo_mais_recente = sigtap_procedimento.arquivos_procedimentos_ftp(data)
-        
+
         if not arquivo_mais_recente:
             print("Nenhum arquivo SIGTAP encontrado")
             return False
 
         zip_path = get_path('dados', arquivo_mais_recente)
-        
+
         print(f"Extraindo {arquivo_mais_recente}...")
         err = os.system(f"{get_path('exes', 'unzip')} {zip_path} {DADOS_DIR}")
         if(err != 0):
@@ -243,19 +244,19 @@ def sigtap(data: str):
             get_path('dados', 'tb_procedimento.txt'),
             get_path('dados', 'desc_procedimento.csv')
         )
-        
+
         sigtap_procedimento.origem_sia_sih(
             get_path('dados', 'rl_procedimento_sia_sih.txt'),
             get_path('dados', 'origem_sia_sih.csv')
         )
-        
+
         print("Processamento SIGTAP concluído")
         return True
-        
+
     except Exception as e:
         print(f"Erro no processamento SIGTAP: {str(e)}")
         return False
-    
+
 
 def dowload_e_processamento(file_and_cnes: list[str]):
     file = file_and_cnes[0]
@@ -270,7 +271,7 @@ def dowload_e_processamento(file_and_cnes: list[str]):
         print(f"a data do arquivo {file} parece não estar em conformidade com o padrão esperado")
         return
 
-    
+
     download_path = get_path(subdirectory_name, 'downloads', fileName)
     dbf_path = get_path(subdirectory_name, 'dbfs', f"{fileName[:-4]}.dbf")
     csv_path = get_path(subdirectory_name, 'csvs', f"{fileName[:-4]}.csv")
@@ -292,7 +293,7 @@ def dowload_e_processamento(file_and_cnes: list[str]):
         processar_dados_sia.processar_dados_csv(csv_path, final_csv_path, start_time, Tdata.current_data())
     else:
         processar_dados_sih.processar_dados_csv(csv_path, final_csv_path, start_time, Tdata.current_data())
-        
+
     print(f"removendo ../{subdirectory_name}/downloads/{fileName}")
     os.remove(download_path)
 
