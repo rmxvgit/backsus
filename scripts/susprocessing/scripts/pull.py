@@ -7,14 +7,14 @@ from multiprocessing.dummy import Pool
 from pathlib import Path
 
 import laudo_final
+import pandas as pd
 import processar_dados_sia
 import processar_dados_sih
 import sigtap_procedimento
 from tempo import Tdata
+import time as t
 
 # python3 pull.py SIA RS 01-24 01-24 2248328
-# TODO: criar forma de conferir se os arquivos foram baixados na íntegra
-# TODO: criar separação de pastas por hospital ok
 # TODO: descobir como exportar pdf para o front end
 # TODO: reorganizar o codigo para carregar os arquivos sigtap uma vez ao mês, fazer o mesmo para o arquivo da selic
 
@@ -38,6 +38,8 @@ def main():
         python_file_dir = os.path.dirname(python_file)
         # os.chdir(python_file_dir)
 
+        CarregaSelic()
+        
         args = sys.argv[1:]
         if not validate_args(args): return
         print(args)
@@ -57,6 +59,42 @@ def main():
     except Exception as e:
         print(f"ERRO CRÍTICO: {str(e)}", file=sys.stderr)
         sys.exit(1)
+
+
+def get_day():
+    date = t.localtime()
+    mes_str = ""
+    if (date.tm_mon >= 10):
+        mes_str = str(date.tm_mon)
+    else:
+        mes_str = f"0{date.tm_mon}"
+
+    if (date.tm_mday >= 10):
+        day_str = str(date.tm_mday)
+    else:
+        day_str = f"0{date.tm_mday}"
+
+    return f"{day_str}/{mes_str}/{date.tm_year}"
+
+
+def CarregaSelic():
+    today_str = get_day()
+    print(today_str)
+    url_bcb = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=csv&dataInicial=01/12/2021&dataFinal={today_str}"
+    try: selic = pd.read_csv(url_bcb, sep=";") 
+    except: return
+    selic['valor'] = selic['valor'].astype(str).str.replace(",", ".").astype(float)
+    selic['valor'] = (selic['valor']/100) + 1
+    lista_selic = selic['valor'].__array__()
+    file_descriptor = open(get_path(DADOS_DIR, 'selic.txt'), "w")
+    file_descriptor.write(str(lista_selic.tolist()))
+    file_descriptor.close;
+
+def getSelic() -> list[float]:
+    file_descriptor = open(get_path(DADOS_DIR, 'selic.txt'), "r")
+    lista = [float(x) for x in (file_descriptor.readline()[1:-1]).split(',')]
+    file_descriptor.close()
+    return lista
 
 # Configuração absoluta de caminhos
 def get_base_dir():
@@ -299,4 +337,6 @@ def dowload_e_processamento(file_and_cnes: list[str]):
 
     print(f"removendo ../{subdirectory_name}/dbfs/{fileName[:-4]}.dbf")
     os.remove(dbf_path)
+
+
 main()
