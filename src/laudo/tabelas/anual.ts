@@ -1,6 +1,7 @@
 function resumoAnualHeader(): string {
   let latexTable = '';
-  latexTable += '\\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}\n';
+  latexTable += '\\newpage';
+  latexTable += '\\large\\textbf{Resumo Anual}';
   latexTable += '\\begin{longtable}{|C{3cm}|C{5cm}|C{6cm}|C{5cm}|}\n';
   latexTable += '\\hline\n';
   latexTable +=

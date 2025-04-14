@@ -2,9 +2,10 @@ function individualizadaHeader(): string {
     let latexTable = '';
     latexTable += '\\newpage';
     latexTable += '\\large\\textbf{Cálculo IVR/TUNEP - Individualizado}';
+    latexTable += '\\small\n'
     latexTable += '\\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}\n';
     latexTable +=
-      '\\begin{longtable}{|C{2cm}|C{10cm}|C{1.2cm}|C{1.5cm}|C{1.5cm}|C{2cm}|C{2cm}|C{2cm}|C{2cm}|}\n';
+      '\\begin{longtable}{|C{2.2cm}|C{10cm}|C{1.2cm}|C{1.5cm}|C{1.5cm}|C{2cm}|C{2cm}|C{2cm}|C{1.8cm}|}\n';
     latexTable += '\\hline\n';
     latexTable +=
       '\\textbf{Cód. Procedimento} & \\textbf{Desc. Procedimento} &\\textbf{Mês/Ano}}& \\textbf{Valor Base} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} &\\textbf{Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} & \\textbf{Base SUS}\n';

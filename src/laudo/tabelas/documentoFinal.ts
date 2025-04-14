@@ -2,15 +2,11 @@ import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { getresumoAnual } from './anual';
 import { getDocumentHeaderString } from './folhaInicial';
-// import { getMensal } from './mensal';
-// import { getProcedimentoAcumulado } from './procedimentoAcumulado';
-// import { getresumoMes } from './resumoMes';
 import { getIndividualizada } from './individualizada';
-import { getResumoTotal } from './resumoTotal';
-// import { getMensal } from './mensal';
+import { getMensal } from './mensal';
 import { getProcedimentoAcumulado } from './procedimentoAcumulado';
-// import { getresumoMes } from './resumoMes';
-// import { getResumoTotal } from './resumoTotal';
+import { getresumoMes } from './resumoMes';
+import { getResumoTotal } from './resumoTotal';
 
 export interface finalDocParams {
   razaoSocial: string;
@@ -54,14 +50,14 @@ export function getFinalDocument(params: finalDocParams): string[] {
   const csv_total = readFileSync(pathToData('resumo_total.csv'), 'utf-8');
   const csv_total_mensal = readFileSync(pathToData('resumo_mes.csv'), 'utf-8');
   const procedimento_acumulado = readFileSync(
-    pathToData('resumo_mes.csv'),
+    pathToData('total_por_procedimento_acumulado.csv'),
     'utf-8',
   );
 
   const endDocument: string = getEndDocument();
-  // const resumoMes: string = getresumoMes(csv_total_mensal);
+  const resumoMes: string = getresumoMes(csv_total_mensal);
   const [resumoTotal, total] = getResumoTotal(csv_total);
-  // const mensal: string = getMensal(csv_mensal);
+  const mensal: string = getMensal(csv_mensal);
   const resumo_anual: string = getresumoAnual(csv_anual);
   const procedimentoAcumulado: string = getProcedimentoAcumulado(procedimento_acumulado);
   const individualizada: string = getIndividualizada(csv_individualizada);
@@ -78,11 +74,11 @@ export function getFinalDocument(params: finalDocParams): string[] {
   });
 
   return [
-    header /*+ resumoTotal*/ +
+    header + resumoTotal +
       resumo_anual +
-      // resumoMes +
-      // procedimentoAcumulado +
-      // mensal +
+      resumoMes +
+      procedimentoAcumulado +
+      mensal +
       individualizada +
       endDocument,
     total,

@@ -1,10 +1,9 @@
 function resumoTotalHeader(): string {
   let latexTable = '';
-  latexTable +=
-    '\\begin{longtable}{|>{\\raggedright\\arraybackslash}p{5cm}|>{\\raggedright\\arraybackslash}p{5cm}|>{\\centering\\arraybackslash}p{5cm}|}';
+  latexTable += '\\large'
+  latexTable += '\\begin{longtable}{|C{5cm}|C{5cm}|C{5cm}|}\n';
   latexTable += '\\hline\n';
-  latexTable +=
-    '\\textbf{IVR/Tunep (R\\$)} & \\textbf{ Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} \\\\\n';
+  latexTable +='\\textbf{IVR/Tunep (R\\$)} & \\textbf{ Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} \n';
   latexTable += '\\hline\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
@@ -17,15 +16,13 @@ function resumoTotalBody(data: string): string[] {
   let body: string = '';
 
   const columns = lines[1].split(';');
-  if (columns.length < 4) return [];
 
-  const ivrTunep = columns[1].trim();
-  const correcao = columns[2].trim();
-  const total = columns[3].trim();
+  const ivrTunep = columns[0].trim();
+  const correcao = columns[1].trim();
+  const total = columns[2].trim();
 
   body += `${ivrTunep} & ${correcao} & ${total}\\\\\n`;
   body += '\\hline\n';
-  body += 'batata';
   body += '\\end{longtable}\n';
 
   return [body, total];

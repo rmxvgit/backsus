@@ -1,10 +1,12 @@
 function resumoMesHeader(): string {
   let latexTable = '';
-  latexTable +=
-    '\\begin{longtable}{|>{\\raggedright\\arraybackslash}p{5cm}|>{\\raggedright\\arraybackslash}p{5cm}|>{\\centering\\arraybackslash}p{5cm}|>{\\centering\\arraybackslash}p{5cm}|}';
+  latexTable += '\\newpage';
+  latexTable += '\\large\\textbf{Resumo Mensal}\n';
+  latexTable += '\\small\n'
+  latexTable += '\\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}\n';
+  latexTable +='\\begin{longtable}{|C{5cm}|C{5cm}|C{5cm}|C{5cm}|}\n';
   latexTable += '\\hline\n';
-  latexTable +=
-    '\\textbf{Mês/Ano} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{ Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} \\\\\n';
+  latexTable +='\\textbf{Mês/Ano} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{ Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} \\\\\n';
   latexTable += '\\hline\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';

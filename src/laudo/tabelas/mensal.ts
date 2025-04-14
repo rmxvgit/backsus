@@ -2,11 +2,13 @@ export interface HeaderParams {}
 
 function getMensalHeader(): string {
   let latexTable = '';
-  latexTable +=
-    '\\begin{longtable}{|>{\\raggedright\\arraybackslash}p{2cm}|>{\\raggedright\\arraybackslash}p{5cm}|>{\\centering\\arraybackslash}p{2cm}|>{\\centering\\arraybackslash}p{2.2cm}|>{\\centering\\arraybackslash}p{1.5cm}|>{\\centering\\arraybackslash}p{2.2cm}|>{\\centering\\arraybackslash}p{1.8cm}|>{\\centering\\arraybackslash}p{1.8cm}|}>{\\centering\\arraybackslash}p{1.8cm}|}';
+  latexTable += '\\newpage';
+  latexTable += '\\large\\textbf{Cálculo IVR/TUNEP - Mensal}';
+  latexTable += '\\small'
+  latexTable += '\\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}\n';
+  latexTable += '\\begin{longtable}{|C{2.2cm}|C{10cm}|C{1.2cm}|C{1.5cm}|C{1.5cm}|C{2cm}|C{2cm}|C{2cm}|}\n';
   latexTable += '\\hline\n';
-  latexTable +=
-    '\\textbf{Código} & \\textbf{Descrição do Procedimento} & \\textbf{Mês/Ano} & \\textbf{Valor Base (R\\$)} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{Correção} & \\textbf{Total} & \\textbf{Base SUS} \\\\\n';
+  latexTable +='\\textbf{Código} & \\textbf{Descrição do Procedimento} & \\textbf{Mês/Ano} & \\textbf{Valor Base (R\\$)} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{Correção} & \\textbf{Total} \n';
   latexTable += '\\hline\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
@@ -22,20 +24,20 @@ function getMensalBody(data: string): string {
     if (lines[i].trim() === '') continue;
 
     const columns = lines[i].split(';');
-    if (columns.length < 9) continue;
+    if (columns.length < 8) continue;
 
     // Formatar os valores
     const codigo = columns[0].trim();
     const descricao = columns[1].trim();
     const mesAno = columns[2].trim();
+    const valorBase = columns[3].trim();
     const qtdBase = columns[4].trim();
     const ivrTunep = columns[5].trim();
     const correcao = columns[6].trim();
     const total = columns[7].trim();
-    const baseSUS = columns[8].trim();
 
     // Adicionar linha à tabela
-    body += `${codigo} & ${descricao} & ${mesAno} & ${qtdBase} & ${ivrTunep} & ${correcao} & ${total} & ${baseSUS}\\\\\n`;
+    body += `${codigo} & ${descricao} & ${mesAno} & ${valorBase} & ${qtdBase} & ${ivrTunep} & ${correcao} & ${total}\\\\\n`;
     body += '\\hline\n';
   }
 

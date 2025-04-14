@@ -107,7 +107,7 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
     \\end{itemize}
 
     \\newpage
-    \\textbf{Cálculo IVR/TUNEP}
+    \\textbf{Resumo Total}
     \\normalsize
     \\setlength{\\tabcolsep}{8pt}
     \\renewcommand{\\arraystretch}{1.5}
