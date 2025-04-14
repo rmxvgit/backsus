@@ -30,4 +30,9 @@ export class LaudoController {
   remove(@Param('id') id: string) {
     return this.laudoService.remove(+id);
   }
+
+  @Get('test-pdf')
+  async testPdf() {
+    return this.laudoService.testGeneratePdf();
+  }
 }

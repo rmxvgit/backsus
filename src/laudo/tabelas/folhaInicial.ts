@@ -1,53 +1,56 @@
 export interface HeaderStrParams {
-    razaoSocial: string;
-    nomeFantasia: string;
-    cnes: string;
-    cnpj: string;
-    cidade: string;
-    estado: string;
-    numeroProcesso: string;
-    dataDistribuicao: string;
-    valorTotal: string;
+  razaoSocial: string;
+  nomeFantasia: string;
+  cnes: string;
+  cnpj: string;
+  cidade: string;
+  estado: string;
+  numeroProcesso: string;
+  dataDistribuicao: string;
+  valorTotal: string;
 }
 
-
-
-
 export function getDocumentHeaderString(params: HeaderStrParams): string {
-    // Formatar o valor total
-    
-    const header =  `\\documentclass{article}
-    \\usepackage[utf8]{inputenc}
-    \\usepackage[T1]{fontenc}
-    \\usepackage{lmodern}
-    \\usepackage{textcomp}
-    \\usepackage[brazil]{babel}
-    \\usepackage{geometry}
-    \\usepackage{pdflscape} % Para páginas em modo paisagem
-    \\usepackage{longtable}
-    \\usepackage{array}
-    \\usepackage{helvet}
-    \\usepackage{graphicx}
-    \\renewcommand{\\familydefault}{\\sfdefault}
+  const header = `\\documentclass{article}
+  \\usepackage[utf8]{inputenc}
+  \\usepackage[T1]{fontenc}
+  \\usepackage{lmodern}
+  \\usepackage{textcomp}
+  \\usepackage[brazil]{babel}
+  \\usepackage{geometry}
+  \\usepackage{pdflscape}
+  \\usepackage{longtable}
+  \\usepackage{array}
+  \\usepackage{helvet}
+  \\usepackage{graphicx}
+  \\usepackage{multirow}
+  \\usepackage{cellspace}
+  \\renewcommand{\\familydefault}{\\sfdefault}
 
-    % Configuração de margens
-    \\geometry{
+  \\setlength{\\cellspacetoplimit}{6pt}
+  \\setlength{\\cellspacebottomlimit}{6pt}
+
+  \\newcolumntype{C}[1]{>{\\centering\\arraybackslash}m{#1}}
+
+  \\geometry{
       a4paper,
-      landscape,
-      left=20mm,
-      right=20mm,
-      top=20mm,
-      bottom=20mm
-    }
+      left=10mm,
+      right=10mm,
+      top=10mm,
+      bottom=10mm
+  }
 
-    % Ajuste para tabelas longas
-    \\usepackage{etoolbox}
-    \\preto\\longtable{\\setlength{\\tabcolsep}{4pt}} % Espaçamento entre colunas
+  \\usepackage{etoolbox}
+  \\preto\\longtable{\\setlength{\\tabcolsep}{4pt}}
 
-    \\begin{document}
-
-    \\section*{Laudo Quantitativo}
-    \\subsection*{Cálculo IVR/TUNEP}
+  \\begin{document}
+      
+      \\pagestyle{empty}
+      
+      \\begin{landscape}
+          
+          \\section*{Laudo Quantitativo}
+          \\subsection*{Cálculo IVR/TUNEP}
 
     \\textbf{1) POLO ATIVO}
 
@@ -100,16 +103,16 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
     \\textbf{4) CONCLUSÃO}
 
     \\begin{itemize}
-    \\item Com base nas informações extraídas do DATASUS de procedimentos hospitalares e ambulatoriais (valores e quantidades), onde este perito processou 100\\% (cem por cento) destas informações e, por último, aplicando as correções monetárias e juros de mora, tem-se o total da ação de cumprimento de sentença de \\textbf{${params.valorTotal}}.
+    \\item Com base nas informações extraídas do DATASUS de procedimentos hospitalares e ambulatoriais (valores e quantidades), onde este perito processou 100\\\\% (cem por cento) destas informações e, por último, aplicando as correções monetárias e juros de mora, tem-se o total da ação de cumprimento de sentença de \\textbf{${params.valorTotal}}.
     \\end{itemize}
 
     \\newpage
-    \\begin{landscape}
-    \\textbf{PROCEDIMENTOS REALIZADOS}
+    \\textbf{Cálculo IVR/TUNEP}
+    \\normalsize
+    \\setlength{\\tabcolsep}{8pt}
+    \\renewcommand{\\arraystretch}{1.5}
     \\scriptsize
-    `
+    \\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}`;
 
-    return header;
+  return header;
 }
-
-

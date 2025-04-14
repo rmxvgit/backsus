@@ -6,9 +6,8 @@ import {
   constants,
   existsSync,
   mkdirSync,
-  readFileSync,
   unlinkSync,
-  writeFileSync,
+  writeFileSync
 } from 'fs';
 import { join } from 'path';
 import { PrismaService } from 'src/prisma.service';
@@ -182,19 +181,18 @@ export class LaudoService {
     if (!hospital) {
       throw new Error('Hospital não encontrado');
     }
- 
 
     const [texContent, valorFinal] = getFinalDocument({
       razaoSocial: hospital.name,
       nomeFantasia: hospital.name,
       cnpj: '0000000',
       cnes: hospital.cnes.toString(),
-      cidade: "cidade",
-      estado: "RS",
-      numeroProcesso: "sla",
-      dataDistribuicao: "sla",
-    })
-    
+      cidade: 'cidade',
+      estado: 'RS',
+      numeroProcesso: 'sla',
+      dataDistribuicao: 'sla',
+    });
+
     // Salva o arquivo .tex
     const texPath = join(laudosDir, `${laudoName}.tex`);
     writeFileSync(texPath, texContent);
@@ -249,5 +247,28 @@ export class LaudoService {
 
   async remove(id: number) {
     return await this.prisma.laudo.delete({ where: { id: id } });
+  }
+
+  async testGeneratePdf() {
+    const laudosDir = join(process.cwd(), 'laudos');
+    const laudoName = 'laudoTESTE';
+
+    // Cria o diretório se não existir
+    if (!existsSync(laudosDir)) {
+      mkdirSync(laudosDir, { recursive: true });
+    }
+
+    // Dados fictícios só para gerar o PDF
+    const dto: CreateLaudoDto = {
+      cnes: '2248328',
+      estado: 'RS',
+      data_inicio: '01-24',
+      data_fim: '01-24',
+      numeroProcesso: '1234567890/2024',
+      dataDistribuicao: '2024-04-01',
+    };
+
+    // Gere apenas o PDF
+    await this.generatePdf(dto, laudoName, laudosDir);
   }
 }
