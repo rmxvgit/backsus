@@ -19,9 +19,9 @@ function resumoTotalBody(data: string): string[] {
   const columns = lines[1].split(';');
   if (columns.length < 4) return [];
 
-  const ivrTunep = parseFloat(columns[1].trim()).toFixed(2);
-  const correcao = parseFloat(columns[2].trim()).toFixed(2);
-  const total = parseFloat(columns[3].trim()).toFixed(2);
+  const ivrTunep = columns[1].trim();
+  const correcao = columns[2].trim();
+  const total = columns[3].trim();
 
   body += `${ivrTunep} & ${correcao} & ${total}\\\\\n`;
   body += '\\hline\n';

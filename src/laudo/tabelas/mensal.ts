@@ -29,10 +29,10 @@ function getMensalBody(data: string): string {
     const descricao = columns[1].trim();
     const mesAno = columns[2].trim();
     const qtdBase = columns[4].trim();
-    const ivrTunep = parseFloat(columns[5].trim()).toFixed(2);
-    const correcao = parseFloat(columns[6].trim()).toFixed(2);
-    const total = parseFloat(columns[7].trim()).toFixed(2);
-    const baseSUS = parseFloat(columns[8].trim());
+    const ivrTunep = columns[5].trim();
+    const correcao = columns[6].trim();
+    const total = columns[7].trim();
+    const baseSUS = columns[8].trim();
 
     // Adicionar linha à tabela
     body += `${codigo} & ${descricao} & ${mesAno} & ${qtdBase} & ${ivrTunep} & ${correcao} & ${total} & ${baseSUS}\\\\\n`;

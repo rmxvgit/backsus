@@ -1,10 +1,13 @@
 function procedimentoAcumuladoHeader(): string {
   let latexTable = '';
+  latexTable += '\\newpage';
+  latexTable += '\\large\\textbf{Cálculo IVR/TUNEP - Acumulado}';
+  latexTable += '\\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}\n';
   latexTable +=
-    '\\begin{longtable}{|>{\\raggedright\\arraybackslash}p{2cm}|>{\\raggedright\\arraybackslash}p{5cm}|>{\\centering\\arraybackslash}p{2cm}|>{\\centering\\arraybackslash}p{2.2cm}|>{\\centering\\arraybackslash}p{1.5cm}|>{\\centering\\arraybackslash}p{2.2cm}|>{\\centering\\arraybackslash}p{1.8cm}|}';
+    '\\begin{longtable}{|C{2cm}|C{10cm}|C{1.2cm}|C{1.5cm}|C{1.5cm}|C{2cm}|C{2cm}|}\n';
   latexTable += '\\hline\n';
   latexTable +=
-    '\\textbf{Cód. procedimento} & \\textbf{Descrição do Procedimento} & \\textbf{Valor Base (R\\$)} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{Correção} & \\textbf{Total} \\\\\n';
+    '\\textbf{Cód. Procedimento} & \\textbf{Desc. Procedimento} & \\textbf{Valor Base} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} &\\textbf{Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)}\n';
   latexTable += '\\hline\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
@@ -25,11 +28,11 @@ function procedimentoAcumuladoBody(data: string): string {
     // Formatar os valores
     const codigo = columns[0].trim();
     const descricao = columns[1].trim();
-    const valorBase = parseFloat(columns[2].trim()).toFixed(2);
+    const valorBase = columns[2].trim()
     const qtdBase = columns[3].trim();
-    const ivrTunep = parseFloat(columns[4].trim()).toFixed(2);
-    const correcao = parseFloat(columns[5].trim()).toFixed(2);
-    const total = parseFloat(columns[6].trim()).toFixed(2);
+    const ivrTunep = columns[4].trim();
+    const correcao = columns[5].trim();
+    const total = columns[6].trim();
 
     // Adicionar linha à tabela
     body += `${codigo} & ${descricao} & ${valorBase} & ${qtdBase} & ${ivrTunep} & ${correcao} & ${total}\\\\\n`;

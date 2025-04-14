@@ -8,7 +8,7 @@ import { getDocumentHeaderString } from './folhaInicial';
 import { getIndividualizada } from './individualizada';
 import { getResumoTotal } from './resumoTotal';
 // import { getMensal } from './mensal';
-// import { getProcedimentoAcumulado } from './procedimentoAcumulado';
+import { getProcedimentoAcumulado } from './procedimentoAcumulado';
 // import { getresumoMes } from './resumoMes';
 // import { getResumoTotal } from './resumoTotal';
 
@@ -63,9 +63,7 @@ export function getFinalDocument(params: finalDocParams): string[] {
   const [resumoTotal, total] = getResumoTotal(csv_total);
   // const mensal: string = getMensal(csv_mensal);
   const resumo_anual: string = getresumoAnual(csv_anual);
-  // const procedimentoAcumulado: string = getProcedimentoAcumulado(
-  //   procedimento_acumulado,
-  // );
+  const procedimentoAcumulado: string = getProcedimentoAcumulado(procedimento_acumulado);
   const individualizada: string = getIndividualizada(csv_individualizada);
   const header: string = getDocumentHeaderString({
     razaoSocial: params.razaoSocial,

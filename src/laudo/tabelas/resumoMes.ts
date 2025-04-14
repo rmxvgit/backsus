@@ -24,8 +24,8 @@ function resumoMesBody(data: string): string {
 
     // Formatar os valores
     const mesAno = columns[0].trim();
-    const ivrTunep = parseFloat(columns[1].trim()).toFixed(2);
-    const correcao = parseFloat(columns[2].trim()).toFixed(2);
+    const ivrTunep = columns[1].trim();
+    const correcao = columns[2].trim();
     const total = columns[3].trim();
 
     // Adicionar linha à tabela
