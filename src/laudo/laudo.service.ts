@@ -151,7 +151,7 @@ export class LaudoService {
 
     // Executa o script Python para processar os dados
     exec(
-      `python3 scripts/susprocessing/scripts/pull.py SIA ${dto.estado} ${dto.data_inicio} ${dto.data_fim} ${dto.cnes}`,
+      `python3 scripts/susprocessing/scripts/pull.py BOTH ${dto.estado} ${dto.data_inicio} ${dto.data_fim} ${dto.cnes}`,
       (error, stdout, stderr) => {
         python_process_result(error, stdout, stderr).then(
           () => {

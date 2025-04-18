@@ -96,8 +96,8 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: 
     porcentagem_de_correcao = (taxa_de_correcao_para_esse_mes - 1)*100
 
     df_main = pd.read_csv(csv_file_path, encoding='utf-8-sig', low_memory=False)
-    df_proc = pd.read_csv(pull.get_path('dados', 'desc_procedimento.csv'))
-    df_tunep = pd.read_csv(pull.get_path('dados', 'tabela_tunep_mais_origem.csv'))
+    df_proc = pd.read_csv(get_path('dados', 'desc_procedimento.csv'))
+    df_tunep = pd.read_csv(get_path('dados', 'tabela_tunep_mais_origem.csv'))
 
     df_filt = df_main[['SP_AA', 'SP_MM', 'SP_VALATO', 'SP_ATOPROF', 'SP_QTD_ATO']]
 
