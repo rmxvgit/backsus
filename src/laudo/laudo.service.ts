@@ -7,7 +7,7 @@ import {
   existsSync,
   mkdirSync,
   unlinkSync,
-  writeFileSync
+  writeFileSync,
 } from 'fs';
 import { join } from 'path';
 import { PrismaService } from 'src/prisma.service';
@@ -25,6 +25,10 @@ interface LaudoEntityCreationOutput {
 @Injectable()
 export class LaudoService {
   constructor(private prisma: PrismaService) {}
+
+  download(id: string) {
+    console.log(id);
+  }
 
   async create(dto: CreateLaudoDto) {
     console.log('Requisição de criação de laudo:');

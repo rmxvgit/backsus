@@ -26,6 +26,11 @@ export class LaudoController {
     return await this.laudoService.findById(+id);
   }
 
+  @Get('dowload:id')
+  dowload(@Param('id') id: string) {
+    return this.laudoService.download(id);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.laudoService.remove(+id);
