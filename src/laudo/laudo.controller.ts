@@ -37,7 +37,7 @@ export class LaudoController {
   }
 
   @Get('test-pdf')
-  async testPdf() {
+  testPdf() {
     return this.laudoService.testGeneratePdf();
   }
 }

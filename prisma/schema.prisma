@@ -21,17 +21,24 @@ model Hospital {
 }
 
 model Laudo {
-  id              Int      @id @default(autoincrement())
-  Hospital        Hospital @relation(fields: [hospitalCnes], references: [cnes])
-  hospitalCnes    Int
-  start           String
-  end             String
-  estado          String
-  fileName        String   @unique
-  ready           Boolean
-  dataDistribuicao DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now())
-  numeroProcesso  String?
-  valorFinal      String?
+  id                Int      @id @default(autoincrement())
+  hospital          Hospital @relation(fields: [cnes], references: [cnes])
+  ready             Boolean
+  cnes              Int
+  file_name         String   @unique
+  razao_social      String
+  nome_fantasia     String
+  cnpj              String
+  ivr_tunep         String
+  estado            String
+  cidade            String
+  numero_processo   String
+  data_inicio       String
+  data_fim          String
+  data_distribuicao DateTime
+  data_fim_correcao String
+  data_citacao      String
+  data_criacao      DateTime @default(now())
+  data_update       DateTime @default(now())
+  valor_final       String?
 }

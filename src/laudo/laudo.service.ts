@@ -10,18 +10,24 @@ import { getFinalDocument } from './tabelas/documentoFinal';
 import { ProjUtils } from 'src/project_utils/utils';
 
 interface LaudoInfo {
-  estado: string;
   id: number;
-  hospitalCnes: number;
-  start: string;
-  end: string;
-  fileName: string;
   ready: boolean;
-  dataDistribuicao: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  numeroProcesso: string | null;
-  valorFinal: string | null;
+  file_name: string;
+  razao_social: string;
+  nome_fantasia: string;
+  cnpj: string;
+  ivr_tunep: string;
+  estado: string;
+  cidade: string;
+  numero_processo: string;
+  data_inicio: string;
+  data_fim: string;
+  data_distribuicao: Date | string;
+  data_fim_correcao: string;
+  data_citacao: string;
+  data_criacao?: Date | string;
+  data_update?: Date | string;
+  valor_final?: string | null;
 }
 
 interface HospitalInfo {
@@ -42,38 +48,48 @@ export class LaudoService {
     console.log('Requisição de criação de laudo:');
 
     const cnes = parseInt(dto.cnes);
-    const laudoName = `laudo${dto.cnes}${dto.data_inicio}${dto.data_fim}`;
+    const laudo_name = `laudo${dto.cnes}${dto.data_inicio}${dto.data_fim}`;
     const hospital: HospitalInfo = ProjUtils.Unwrap(
       await this.prisma.hospital.findUnique({ where: { cnes: cnes } }),
     );
 
+    // GARANTE QUE OS DIRETÓRIOS EXISTAM E SEJAM USÁVEIS
     DirsHandler.CreateLaudosDirIfNecessary();
     DirsHandler.VerifyLaudosDirPermissions();
 
     // Primeiro cria o registro que será armazenado no banco de dados
     const laudo_to_create: Prisma.LaudoCreateInput = {
-      estado: hospital.estado,
-      start: dto.data_inicio,
-      end: dto.data_fim,
-      fileName: laudoName,
       ready: false,
-      Hospital: { connect: { cnes: cnes } },
-      numeroProcesso: dto.numero_processo,
-      dataDistribuicao: dto.data_distribuicao
-        ? new Date(dto.data_distribuicao)
-        : undefined,
+      file_name: laudo_name,
+      estado: hospital.estado,
+      razao_social: hospital.name,
+      nome_fantasia: hospital.name,
+      data_citacao: dto.data_citacao,
+      cidade: dto.cidade,
+      cnpj: dto.cnpj,
+      ivr_tunep: dto.ivr_tunep,
+      data_fim_correcao: dto.data_fim_correcao,
+      data_inicio: dto.data_inicio,
+      data_fim: dto.data_fim,
+      numero_processo: dto.numero_processo,
+      data_distribuicao: dto.data_distribuicao,
+      hospital: { connect: { cnes: cnes } },
     };
 
-    // registra o dado na database
+    // Registra o dado na database. (NÃO AFETA O SCRIPT NEM A GERAÇÃO DE PDF)
     const laudo = await this.tryToRegisterOrUpdateLaudo(laudo_to_create);
 
+    // Execução do script e geração do pdf
     this.makeLaudo(laudo, hospital);
+
+    return 'solicitação de geração de laudo concluida com sucesso';
   }
 
   makeLaudo(laudo: LaudoInfo, hospital: HospitalInfo) {
     // Executa o script Python para processar os dados
     exec(
-      `python3 scripts/susprocessing/scripts/pull.py BOTH ${hospital.estado} ${laudo.start} ${laudo.end} ${hospital.cnes}`,
+      //TODO: conferir se a chamada está correta
+      `python3 scripts/susprocessing/scripts/pull.py BOTH ${hospital.estado} ${laudo.data_inicio} ${laudo.data_fim} ${hospital.cnes}`,
       (error, stdout, stderr) => {
         this.handleScriptConclusion(error, stdout, stderr, laudo, hospital);
       },
@@ -87,13 +103,8 @@ export class LaudoService {
     laudo: LaudoInfo,
     hospital: HospitalInfo,
   ) {
-    // Se der erro, erre
     if (error) {
-      console.error('O SCRIPT DE PROCESSAMENTO FALHOU!!!');
-      console.error('LOG DO SCRIPT: --------------------');
-      console.log(stdout, stderr);
-
-      console.log('Removendo laudo do banco de dados:');
+      this.reportPythonScriptError(error, stdout, stderr);
 
       this.prisma.laudo
         .delete({
@@ -114,14 +125,7 @@ export class LaudoService {
     try {
       pdf_generation_result = this.generatePdf(laudo, hospital);
     } catch (pdfError) {
-      // se não conseguir gerar o pdf, relata o problema,
-      // apaga o laudo do banco de dados e retorna
-      console.error('Erro durante geração do PDF:', pdfError);
-      const pdfPath = join(LAUDOS_DIR, `${laudo.fileName}.pdf`);
-      const errorMessage = existsSync(pdfPath)
-        ? 'PDF foi gerado mas ocorreram warnings'
-        : 'Falha na geração do PDF';
-      console.log(errorMessage);
+      this.reportPdfScriptError(pdfError, laudo);
 
       this.prisma.laudo
         .delete({
@@ -142,12 +146,35 @@ export class LaudoService {
         where: { id: laudo.id },
         data: {
           ready: true,
-          valorFinal: pdf_generation_result,
+          valor_final: pdf_generation_result,
         },
       })
       .catch(() => {
         throw new Error('Erro ao atualizar o laudo na db.');
       });
+  }
+
+  private reportPythonScriptError(
+    error: ExecException,
+    stdout: string,
+    stderr: string,
+  ) {
+    console.error('O SCRIPT DE PROCESSAMENTO FALHOU!!!');
+    console.error('LOG DO SCRIPT: --------------------');
+    console.log(stdout, stderr);
+
+    console.log('Removendo laudo do banco de dados:');
+  }
+
+  private reportPdfScriptError(pdfError: any, laudo: LaudoInfo) {
+    // se não conseguir gerar o pdf, relata o problema,
+    // apaga o laudo do banco de dados e retorna
+    console.error('Erro durante geração do PDF:', pdfError);
+    const pdfPath = join(LAUDOS_DIR, `${laudo.file_name}.pdf`);
+    const errorMessage = existsSync(pdfPath)
+      ? 'PDF foi gerado mas ocorreram warnings'
+      : 'Falha na geração do PDF';
+    console.log(errorMessage);
   }
 
   async tryToRegisterOrUpdateLaudo(laudo: Prisma.LaudoCreateInput) {
@@ -160,7 +187,7 @@ export class LaudoService {
       try {
         // Se já existir, atualiza para ready: false
         output = await this.prisma.laudo.update({
-          where: { fileName: laudo.fileName },
+          where: { file_name: laudo.file_name },
           data: { ready: false },
         });
       } catch {
@@ -174,16 +201,16 @@ export class LaudoService {
     const [texContent, valorFinal] = getFinalDocument({
       razaoSocial: hospital.name,
       nomeFantasia: hospital.name,
-      cnpj: '0000000',
+      cnpj: laudo.cnpj,
       cnes: hospital.cnes.toString(),
-      cidade: 'cidade',
+      cidade: laudo.cidade,
       estado: hospital.estado,
-      numeroProcesso: ProjUtils.Unwrap(laudo.numeroProcesso),
-      dataDistribuicao: ProjUtils.Unwrap(laudo.dataDistribuicao).toString(),
+      numeroProcesso: ProjUtils.Unwrap(laudo.numero_processo),
+      dataDistribuicao: ProjUtils.Unwrap(laudo.data_distribuicao).toString(),
     });
 
     // Salva o arquivo .tex
-    const texPath = join(LAUDOS_DIR, `${laudo.fileName}.tex`);
+    const texPath = join(LAUDOS_DIR, `${laudo.file_name}.tex`);
     writeFileSync(texPath, texContent);
     console.log(`Arquivo .tex gerado em: ${texPath}`);
 
@@ -200,14 +227,14 @@ export class LaudoService {
     }
 
     // Verifica se o PDF foi gerado
-    const pdfPath = join(LAUDOS_DIR, `${laudo.fileName}.pdf`);
+    const pdfPath = join(LAUDOS_DIR, `${laudo.file_name}.pdf`);
     if (!existsSync(pdfPath)) {
       throw new Error('O arquivo PDF não foi gerado');
     }
 
     // Limpa arquivos auxiliares do LaTeX
     ['.aux', '.log', '.out'].forEach((ext) => {
-      const auxFile = join(LAUDOS_DIR, `${laudo.fileName}${ext}`);
+      const auxFile = join(LAUDOS_DIR, `${laudo.file_name}${ext}`);
       if (existsSync(auxFile)) {
         unlinkSync(auxFile);
       }
@@ -224,7 +251,7 @@ export class LaudoService {
 
   async findByCnes(cnes: number) {
     const laudos = await this.prisma.laudo.findMany({
-      where: { hospitalCnes: cnes },
+      where: { cnes: cnes },
     });
     return laudos;
   }
@@ -246,16 +273,22 @@ export class LaudoService {
     const laudo: LaudoInfo = {
       estado: 'RS',
       id: 10,
-      hospitalCnes: 2222222,
-      start: '12-23',
-      end: '12-23',
-      fileName: 'batata.pdf',
+      data_inicio: '12-23',
+      data_fim: '12-23',
+      file_name: 'batata.pdf',
+      nome_fantasia: 'fantasia',
+      razao_social: 'razao social',
+      data_fim_correcao: '12-23',
+      data_citacao: '12-23',
+      cidade: 'porto alegre',
+      cnpj: '221221',
+      ivr_tunep: 'ivr',
       ready: false,
-      dataDistribuicao: new Date('00/12/23'),
-      createdAt: new Date('00/12/23'),
-      updatedAt: new Date('00/12/23'),
-      numeroProcesso: '1111111111',
-      valorFinal: '10',
+      data_distribuicao: new Date('00/12/23'),
+      data_criacao: new Date('00/12/23'),
+      data_update: new Date('00/12/23'),
+      numero_processo: '1111111111',
+      valor_final: '10',
     };
 
     const hospital: HospitalInfo = {
