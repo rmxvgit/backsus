@@ -8,7 +8,7 @@ export class LaudoController {
 
   @Post('make')
   create(@Body() createLaudoDto: CreateLaudoDto) {
-    return this.laudoService.create(createLaudoDto);
+    return this.laudoService.handleMakeRequest(createLaudoDto);
   }
 
   @Get()
