@@ -1,6 +1,8 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { getresumoAnual } from './anual';
+import { getfilesPA } from './arquivosPA';
+import { getfilesSP } from './arquivosSP';
 import { getDocumentHeaderString } from './folhaInicial';
 import { getIndividualizada } from './individualizada';
 import { getMensal } from './mensal';
@@ -20,7 +22,6 @@ export interface finalDocParams {
 }
 
 export function getFinalDocument(params: finalDocParams): string[] {
-  // Caminho para o arquivo CSV
   function pathToData(finalPath: string): string {
     const csvPath = join(
       process.cwd(),
@@ -36,6 +37,61 @@ export function getFinalDocument(params: finalDocParams): string[] {
 
     return csvPath;
   }
+
+  function getCSVFilenames(): {
+    spFiles: string[];
+    paFiles: string[];
+    csvDir: string;
+  } {
+    const csvDir = join(
+      process.cwd(),
+      'scripts',
+      'susprocessing',
+      `H${params.cnes}${params.estado}`,
+      'csvs',
+    );
+
+    if (!existsSync(csvDir)) {
+      console.warn(`Aviso: Pasta CSV não encontrada em ${csvDir}`);
+      return { spFiles: [], paFiles: [], csvDir };
+    }
+
+    const allFiles = readdirSync(csvDir);
+    const result = { spFiles: [] as string[], paFiles: [] as string[] };
+
+    allFiles.forEach((filename) => {
+      if (!filename.toLowerCase().endsWith('.csv')) return;
+
+      const prefix = filename.substring(0, 2).toUpperCase();
+
+      if (prefix === 'SP') {
+        result.spFiles.push(filename);
+      } else if (prefix === 'PA') {
+        result.paFiles.push(filename);
+      }
+    });
+
+    return {
+      spFiles: result.spFiles.sort(),
+      paFiles: result.paFiles.sort(),
+      csvDir,
+    };
+  }
+
+  const { spFiles, paFiles, csvDir } = getCSVFilenames();
+
+  let arquivossp = '';
+  spFiles.forEach((file) => {
+    const csv_arquivo = readFileSync(join(csvDir, file), 'utf8');
+    arquivossp += getfilesSP(csv_arquivo);
+  });
+
+  let arquivospa = '';
+  paFiles.forEach((file) => {
+    const csv_arquivo = readFileSync(join(csvDir, file), 'utf8');
+    arquivospa += getfilesPA(csv_arquivo);
+    // TODO: chamar função e adicionar a variavel
+  });
 
   // Ler o arquivo CSV
   const csv_individualizada = readFileSync(
@@ -59,7 +115,9 @@ export function getFinalDocument(params: finalDocParams): string[] {
   const [resumoTotal, total] = getResumoTotal(csv_total);
   const mensal: string = getMensal(csv_mensal);
   const resumo_anual: string = getresumoAnual(csv_anual);
-  const procedimentoAcumulado: string = getProcedimentoAcumulado(procedimento_acumulado);
+  const procedimentoAcumulado: string = getProcedimentoAcumulado(
+    procedimento_acumulado,
+  );
   const individualizada: string = getIndividualizada(csv_individualizada);
   const header: string = getDocumentHeaderString({
     razaoSocial: params.razaoSocial,
@@ -74,12 +132,15 @@ export function getFinalDocument(params: finalDocParams): string[] {
   });
 
   return [
-    header + resumoTotal +
+    header +
+      resumoTotal +
       resumo_anual +
       resumoMes +
       procedimentoAcumulado +
       mensal +
       individualizada +
+      // arquivossp +
+      arquivospa +
       endDocument,
     total,
   ];

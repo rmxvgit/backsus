@@ -33,7 +33,7 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
   \\newcolumntype{C}[1]{>{\\centering\\arraybackslash}m{#1}}
 
   \\geometry{
-      a4paper,
+      paper=a1paper,
       left=10mm,
       right=10mm,
       top=10mm,
