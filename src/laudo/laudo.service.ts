@@ -9,7 +9,7 @@ import { CreateLaudoDto } from './dto/create-laudo.dto';
 import { getFinalDocument } from './tabelas/documentoFinal';
 import { ProjUtils } from 'src/project_utils/utils';
 
-interface LaudoInfo {
+export interface LaudoInfo {
   id: number;
   ready: boolean;
   file_name: string;
@@ -30,7 +30,7 @@ interface LaudoInfo {
   valor_final?: string | null;
 }
 
-interface HospitalInfo {
+export interface HospitalInfo {
   cnes: number;
   estado: string;
   name: string;
@@ -72,7 +72,7 @@ export class LaudoService {
       data_inicio: dto.data_inicio,
       data_fim: dto.data_fim,
       numero_processo: dto.numero_processo,
-      data_distribuicao: dto.data_distribuicao,
+      data_distribuicao: new Date(dto.data_distribuicao),
       hospital: { connect: { cnes: cnes } },
     };
 
@@ -119,8 +119,9 @@ export class LaudoService {
       return;
     }
 
-    let pdf_generation_result: string;
+    console.log('O SCRIPT EM PYTHON FUNCIONOU');
 
+    let pdf_generation_result: string;
     // tenta gerar o pdf
     try {
       pdf_generation_result = this.generatePdf(laudo, hospital);
@@ -178,11 +179,13 @@ export class LaudoService {
   }
 
   async tryToRegisterOrUpdateLaudo(laudo: Prisma.LaudoCreateInput) {
+    console.log('Criando/Atualizando laudo na db...');
     let output: LaudoInfo;
     try {
       output = await this.prisma.laudo.create({
         data: laudo,
       });
+      console.log('Laudo atualizado na db');
     } catch {
       try {
         // Se já existir, atualiza para ready: false
@@ -190,6 +193,7 @@ export class LaudoService {
           where: { file_name: laudo.file_name },
           data: { ready: false },
         });
+        console.log('Laudo atualizado na database.');
       } catch {
         throw new Error('Erro ao criar/atualizar laudo na db');
       }

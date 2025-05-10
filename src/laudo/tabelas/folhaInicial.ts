@@ -17,7 +17,7 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
   \\usepackage{lmodern}
   \\usepackage{textcomp}
   \\usepackage[brazil]{babel}
-  \\usepackage{geometry}
+  \\usepackage[paper=a3paper, landscape, margin=0.3cm]{geometry}
   \\usepackage{pdflscape}
   \\usepackage{longtable}
   \\usepackage{array}
@@ -31,24 +31,15 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
   \\setlength{\\cellspacebottomlimit}{6pt}
 
   \\newcolumntype{C}[1]{>{\\centering\\arraybackslash}m{#1}}
-
-  \\geometry{
-      a4paper,
-      left=10mm,
-      right=10mm,
-      top=10mm,
-      bottom=10mm
-  }
-
   \\usepackage{etoolbox}
   \\preto\\longtable{\\setlength{\\tabcolsep}{4pt}}
 
   \\begin{document}
-      
+
       \\pagestyle{empty}
-      
+
       \\begin{landscape}
-          
+
           \\section*{Laudo Quantitativo}
           \\subsection*{Cálculo IVR/TUNEP}
 

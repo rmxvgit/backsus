@@ -1,3 +1,4 @@
+#! .vevn/bin/python3.12
 # flake8: noqa
 
 import ftplib as ftp
@@ -39,7 +40,7 @@ def main():
         # os.chdir(python_file_dir)
 
         CarregaSelic()
-        
+
         args = sys.argv[1:]
         if not validate_args(args): return
         print(args)
@@ -81,7 +82,7 @@ def CarregaSelic():
     today_str = get_day()
     print(today_str)
     url_bcb = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=csv&dataInicial=01/12/2021&dataFinal={today_str}"
-    try: selic = pd.read_csv(url_bcb, sep=";") 
+    try: selic = pd.read_csv(url_bcb, sep=";")
     except: return
     selic['valor'] = selic['valor'].astype(str).str.replace(",", ".").astype(float)
     selic['valor'] = (selic['valor']/100) + 1
