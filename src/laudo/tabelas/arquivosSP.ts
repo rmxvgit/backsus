@@ -1,21 +1,15 @@
-function filesSP(filename: string = ''): string {
+function filesSP(): string {
   let latexTable = '';
   latexTable += '\\newpage\n';
-  latexTable += '\\tiny\n';
   latexTable += '\\textbf{Relatório Completo de Serviços Profissionais - SP}\n';
-
+  latexTable += '\\small\n';
   latexTable += '\\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}\n';
-
-  // Definindo a tabela com 35 colunas (ajuste as larguras conforme necessidade)
-  latexTable += '\\begin{longtable}{|';
-  for (let i = 0; i < 35; i++) {
-    latexTable += 'C{0.7cm}|';
-  }
-  latexTable += '}\n';
-
+  latexTable +=
+    '\\begin{longtable}{|C{2cm}|C{2cm}|C{2cm}|C{2cm}|C{2cm}|C{2cm}|C{3cm}|C{4cm}|C{3cm}|C{3cm}|C{3cm}|C{2cm}|C{4cm}|C{3cm}|C{2cm}|C{4cm}|C{3cm}|C{6cm}|C{4cm}|C{2cm}|C{2cm}|C{4cm}|C{4cm}|C{2cm}|C{2cm}|C{4cm}|C{2cm}|C{5cm}|C{5cm}|C{2cm}|C{3cm}|C{6cm}|C{2cm}|C{2cm}|C{2cm}|C{4cm}|C{2cm}|}\n';
+  //                      1       2       3     4       5       6     7     8       9     10    11      12      13    14    15      16      17    18     19     20     21     22     23      24     25     26     27     28     29     30     31     32     33     34    35     36    37
   latexTable += '\\hline\n';
   latexTable +=
-    'SP\\_GESTOR & SP\\_UF & SP\\_AA & SP\\_MM & SP\\_CNES & SP\\_NAIH & SP\\_PROCREA & SP\\_DTINTER & SP\\_DTSAIDA & SP\\_NUM\\_PR & SP\\_TIPO & SP\\_CPFCGC & SP\\_ATOPROF & SP\\_TP\\_ATO & SP\\_QTD\\_ATO & SP\\_PTSP & SP\\_NF & SP\\_VALATO & SP\\_M\\_HOSP & SP\\_M\\_PAC & SP\\_DES\\_HOS & SP\\_DES\\_PAC & SP\\_COMPLEX & SP\\_FINANC & SP\\_CO\\_FAEC & SP\\_PF\\_CBO & SP\\_PF\\_DOC & SP\\_PJ\\_DOC & IN\\_TP\\_VAL & SEQUENCIA & REMESSA & SERV\\_CLA & SP\\_CIDPRI & SP\\_CIDSEC & SP\\_QT\\_PROC & SP\\_U\\_AIH\\\\\n';
+    '\\textbf{Linha} & \\textbf{SP\\_GESTOR} & \\textbf{SP\\_UF} & \\textbf{SP\\_AA} & \\textbf{SP\\_MM} & \\textbf{SP\\_CNES} & \\textbf{SP\\_NAIH} & \\textbf{SP\\_PROCREA} & \\textbf{SP\\_DTINTER} & \\textbf{SP\\_DTSAIDA} & \\textbf{SP\\_NUM\\_PR} & \\textbf{SP\\_TIPO} & \\textbf{SP\\_CPFCGC} & \\textbf{SP\\_ATOPROF} & \\textbf{SP\\_TP\\_ATO} & \\textbf{SP\\_QTD\\_ATO} & \\textbf{SP\\_PTSP} & \\textbf{SP\\_NF} & \\textbf{SP\\_VALATO} & \\textbf{SP\\_M\\_HOSP} & \\textbf{SP\\_M\\_PAC} & \\textbf{SP\\_DES\\_HOS} & \\textbf{SP\\_DES\\_PAC} & \\textbf{SP\\_COMPLEX} & \\textbf{SP\\_FINANC} & \\textbf{SP\\_CO\\_FAEC} & \\textbf{SP\\_PF\\_CBO} & \\textbf{SP\\_PF\\_DOC} & \\textbf{SP\\_PJ\\_DOC} & \\textbf{IN\\_TP\\_VAL} & \\textbf{SEQUENCIA} & \\textbf{REMESSA} & \\textbf{SERV\\_CLA} & \\textbf{SP\\_CIDPRI} & \\textbf{SP\\_CIDSEC} & \\textbf{SP\\_QT\\_PROC} & \\textbf{SP\\_U\\_AIH}\\\\\n';
   latexTable += '\\hline\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
@@ -31,9 +25,8 @@ function filesSPBody(data: string): string {
     if (lines[i].trim() === '') continue;
 
     const columns = lines[i].split(',');
-    if (columns.length < 35) continue;
+    if (columns.length < 37) continue;
 
-    // Processa todas as 35 colunas exatamente como estão
     let row = '';
     for (let j = 0; j < columns.length; j++) {
       const value = columns[j].trim();
@@ -47,8 +40,8 @@ function filesSPBody(data: string): string {
   return body;
 }
 
-export function getfilesSP(data: string, filename: string = ''): string {
-  const header = filesSP(filename);
+export function getfilesSP(data: string): string {
+  const header = filesSP();
   const body = filesSPBody(data);
   return header + body;
 }

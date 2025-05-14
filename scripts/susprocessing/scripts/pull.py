@@ -3,16 +3,17 @@
 import ftplib as ftp
 import os
 import sys
+import time as t
 from multiprocessing.dummy import Pool
 from pathlib import Path
 
+import arquivos_pa_e_sp
 import laudo_final
 import pandas as pd
 import processar_dados_sia
 import processar_dados_sih
 import sigtap_procedimento
 from tempo import Tdata
-import time as t
 
 # python3 pull.py SIA RS 01-24 01-24 2248328
 # TODO: descobir como exportar pdf para o front end
@@ -220,13 +221,14 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
 def unite_files(subdirectory_name: str):
     print("Unindo arquivos para gerar laudo final...")
     try:
-        #Usando get_path para garantir que o caminho seja absoluto =)
-        csv_dir = get_path(subdirectory_name, 'finalcsvs')
+        csv_dir = get_path(subdirectory_name, 'csvs')
+        csv_final_dir = get_path(subdirectory_name, 'finalcsvs')
         laudos_dir = get_path(subdirectory_name, 'laudos')
-        if not os.path.exists(csv_dir):
-            raise FileNotFoundError(f"Diretório não encontrado: {csv_dir}")
+        if not os.path.exists(csv_final_dir) or not os.path.exists(csv_dir):
+            raise FileNotFoundError(f"Diretório não encontrado")
 
-        laudo_final.main(csv_dir, laudos_dir)
+        laudo_final.main(csv_final_dir, laudos_dir)
+        arquivos_pa_e_sp.main(csv_dir, laudos_dir)
     except Exception as e:
         print(f"Erro ao unir arquivos: {str(e)}")
         raise

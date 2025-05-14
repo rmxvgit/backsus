@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { getresumoAnual } from './anual';
 import { getfilesPA } from './arquivosPA';
@@ -38,62 +38,16 @@ export function getFinalDocument(params: finalDocParams): string[] {
     return csvPath;
   }
 
-  function getCSVFilenames(): {
-    spFiles: string[];
-    paFiles: string[];
-    csvDir: string;
-  } {
-    const csvDir = join(
-      process.cwd(),
-      'scripts',
-      'susprocessing',
-      `H${params.cnes}${params.estado}`,
-      'csvs',
-    );
-
-    if (!existsSync(csvDir)) {
-      console.warn(`Aviso: Pasta CSV não encontrada em ${csvDir}`);
-      return { spFiles: [], paFiles: [], csvDir };
-    }
-
-    const allFiles = readdirSync(csvDir);
-    const result = { spFiles: [] as string[], paFiles: [] as string[] };
-
-    allFiles.forEach((filename) => {
-      if (!filename.toLowerCase().endsWith('.csv')) return;
-
-      const prefix = filename.substring(0, 2).toUpperCase();
-
-      if (prefix === 'SP') {
-        result.spFiles.push(filename);
-      } else if (prefix === 'PA') {
-        result.paFiles.push(filename);
-      }
-    });
-
-    return {
-      spFiles: result.spFiles.sort(),
-      paFiles: result.paFiles.sort(),
-      csvDir,
-    };
-  }
-
-  const { spFiles, paFiles, csvDir } = getCSVFilenames();
-
-  let arquivossp = '';
-  spFiles.forEach((file) => {
-    const csv_arquivo = readFileSync(join(csvDir, file), 'utf8');
-    arquivossp += getfilesSP(csv_arquivo);
-  });
-
-  let arquivospa = '';
-  paFiles.forEach((file) => {
-    const csv_arquivo = readFileSync(join(csvDir, file), 'utf8');
-    arquivospa += getfilesPA(csv_arquivo);
-    // TODO: chamar função e adicionar a variavel
-  });
-
   // Ler o arquivo CSV
+  const csv_arquivossp = readFileSync(
+    pathToData('arquivos_sp_reunidos.csv'),
+    'utf-8',
+  );
+  const csv_arquivospa = readFileSync(
+    pathToData('arquivos_pa_reunidos.csv'),
+    'utf-8',
+  );
+
   const csv_individualizada = readFileSync(
     pathToData('calculo_IVR_TUNEP_individualizado.csv'),
     'utf-8',
@@ -110,6 +64,8 @@ export function getFinalDocument(params: finalDocParams): string[] {
     'utf-8',
   );
 
+  const arquivosSP: string = getfilesSP(csv_arquivossp);
+  const arquivosPA: string = getfilesPA(csv_arquivospa);
   const endDocument: string = getEndDocument();
   const resumoMes: string = getresumoMes(csv_total_mensal);
   const [resumoTotal, total] = getResumoTotal(csv_total);
@@ -139,8 +95,8 @@ export function getFinalDocument(params: finalDocParams): string[] {
       procedimentoAcumulado +
       mensal +
       individualizada +
-      // arquivossp +
-      arquivospa +
+      arquivosSP +
+      arquivosPA +
       endDocument,
     total,
   ];
