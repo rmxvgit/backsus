@@ -1,4 +1,3 @@
-#! .vevn/bin/python3.12
 # flake8: noqa
 
 import ftplib as ftp
@@ -8,9 +7,9 @@ import time as t
 from multiprocessing.dummy import Pool
 from pathlib import Path
 
-import arquivos_pa_e_sp
 import laudo_final
 import pandas as pd
+import arquivos_pa_e_sp
 import processar_dados_sia
 import processar_dados_sih
 import sigtap_procedimento
