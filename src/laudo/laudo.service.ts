@@ -221,7 +221,7 @@ export class LaudoService {
     // Compila o .tex para .pdf
     try {
       execSync(
-        `luatex -interaction=nonstopmode -output-directory=${LAUDOS_DIR} ${texPath}`,
+        `lualatex -interaction=nonstopmode -output-directory=${LAUDOS_DIR} ${texPath}`,
         { cwd: LAUDOS_DIR, stdio: 'inherit' },
       );
     } catch {

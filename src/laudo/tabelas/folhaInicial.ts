@@ -11,13 +11,14 @@ export interface HeaderStrParams {
 }
 
 export function getDocumentHeaderString(params: HeaderStrParams): string {
-  const header = `\\documentclass{article}
+  const header = `
+  \\documentclass{article}
   \\usepackage[utf8]{inputenc}
   \\usepackage[T1]{fontenc}
   \\usepackage{lmodern}
   \\usepackage{textcomp}
   \\usepackage[brazil]{babel}
-  \\usepackage[paper=a3paper, landscape, margin=0.3cm]{geometry}
+  \\usepackage{geometry}
   \\usepackage{pdflscape}
   \\usepackage{longtable}
   \\usepackage{array}
