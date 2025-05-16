@@ -8,7 +8,7 @@ export class LaudoController {
 
   @Post('make')
   create(@Body() createLaudoDto: CreateLaudoDto) {
-    return this.laudoService.create(createLaudoDto);
+    return this.laudoService.handleMakeRequest(createLaudoDto);
   }
 
   @Get()
@@ -37,7 +37,7 @@ export class LaudoController {
   }
 
   @Get('test-pdf')
-  async testPdf() {
+  testPdf() {
     return this.laudoService.testGeneratePdf();
   }
 }
