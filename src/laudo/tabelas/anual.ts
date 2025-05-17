@@ -7,9 +7,16 @@ function resumoAnualHeader(): string {
   latexTable +=
     '\\multirow{2}{*}{\\textbf{Ano}} & \\multirow{2}{*}{\\textbf{IVR/Tunep (R\\$)}} & \\multirow{2}{*}{\\textbf{Correção Monetária (R\\$)}} & \\multirow{2}{*}{\\textbf{Total IVR/Tunep (R\\$)}} \\\\[2mm]\n';
   latexTable += '\\hline\n';
+  latexTable += '\\endfirsthead\n';
+  latexTable += '\\hline\n';
+  latexTable +=
+    '\\multirow{2}{*}{\\textbf{Ano}} & \\multirow{2}{*}{\\textbf{IVR/Tunep (R\\$)}} & \\multirow{2}{*}{\\textbf{Correção Monetária (R\\$)}} & \\multirow{2}{*}{\\textbf{Total IVR/Tunep (R\\$)}} \\\\[2mm]\n';
+  latexTable += '\\hline\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
   latexTable += '\\endfoot\n';
+  latexTable += '\\hline\n';
+  latexTable += '\\endlastfoot\n';
   return latexTable;
 }
 

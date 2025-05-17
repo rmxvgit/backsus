@@ -31,11 +31,11 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
   \\setlength{\\cellspacetoplimit}{6pt}
   \\setlength{\\cellspacebottomlimit}{6pt}
 
-  \\newcolumntype{C}[1]{>{\\centering\\arraybackslash}m{#1}}
+  \\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}
 
   \\geometry{
-      paperwidth=100cm,
-      paperheight=100cm,
+      paperwidth=50cm,
+      paperheight=140cm,
       landscape,
       left=10mm,
       right=10mm,
@@ -105,14 +105,14 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
     \\textbf{4) CONCLUSÃO}
 
     \\begin{itemize}
-    \\item Com base nas informações extraídas do DATASUS de procedimentos hospitalares e ambulatoriais (valores e quantidades), onde este perito processou 100\\\\% (cem por cento) destas informações e, por último, aplicando as correções monetárias e juros de mora, tem-se o total da ação de cumprimento de sentença de \\textbf{${params.valorTotal}}.
+    \\item Com base nas informações extraídas do DATASUS de procedimentos hospitalares e ambulatoriais (valores e quantidades), onde este perito processou 100\\% (cem por cento) destas informações e, por último, aplicando as correções monetárias e juros de mora, tem-se o total da ação de cumprimento de sentença de \\textbf{${params.valorTotal}}.
     \\end{itemize}
 
     \\newpage
     \\textbf{Resumo Total}
     \\setlength{\\tabcolsep}{8pt}
     \\renewcommand{\\arraystretch}{1.5}
-    \\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}`;
+    `;
 
   return header;
 }

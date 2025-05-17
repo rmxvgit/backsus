@@ -8,7 +8,6 @@ function procedimentoAcumuladoHeader(): string {
   latexTable += '\\hline\n';
   latexTable +=
     '\\textbf{Cód. Procedimento} & \\textbf{Desc. Procedimento} & \\textbf{Valor Base} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} &\\textbf{Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)}\n';
-  latexTable += '\\hline\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
   latexTable += '\\endfoot\n';

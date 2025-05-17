@@ -6,11 +6,18 @@ function getMensalHeader(): string {
     '\\begin{longtable}{|C{8.0cm}|C{32.0cm}|C{3.8cm}|C{4.8cm}|C{4.8cm}|C{6.4cm}|C{6.4cm}|C{6.4cm}|}\n';
   latexTable += '\\hline\n';
   latexTable +=
-    '\\textbf{Código} & \\textbf{Descrição do Procedimento} & \\textbf{Mês/Ano} & \\textbf{Valor Base (R\\$)} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{Correção} & \\textbf{Total} \n';
+    '\\textbf{Código} & \\textbf{Descrição do Procedimento} & \\textbf{Mês/Ano} & \\textbf{Valor Base (R\\$)} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{Correção} & \\textbf{Total} \\\\\n';
+  latexTable += '\\hline\n';
+  latexTable += '\\endfirsthead\n';
+  latexTable += '\\hline\n';
+  latexTable +=
+    '\\textbf{Código} & \\textbf{Descrição do Procedimento} & \\textbf{Mês/Ano} & \\textbf{Valor Base (R\\$)} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{Correção} & \\textbf{Total} \\\\\n';
   latexTable += '\\hline\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
   latexTable += '\\endfoot\n';
+  latexTable += '\\hline\n';
+  latexTable += '\\endlastfoot\n';
   return latexTable;
 }
 
