@@ -103,8 +103,7 @@ export function getFinalDocument(params: finalDocParams): string[] {
 }
 
 function getEndDocument(): string {
-  return `\\end{landscape}
-    \\end{document}`;
+  return `\\end{document}`;
 }
 
 export function stileValorTotal(valorTotal: number): string {

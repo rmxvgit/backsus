@@ -2,10 +2,9 @@ function filesSP(): string {
   let latexTable = '';
   latexTable += '\\newpage\n';
   latexTable += '\\textbf{Relatório Completo de Serviços Profissionais - SP}\n';
-  latexTable += '\\small\n';
-  latexTable += '\\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}\n';
+  latexTable += '\\tiny\n';
   latexTable +=
-    '\\begin{longtable}{|C{2cm}|C{2cm}|C{2cm}|C{2cm}|C{2cm}|C{2cm}|C{3cm}|C{4cm}|C{3cm}|C{3cm}|C{3cm}|C{2cm}|C{4cm}|C{3cm}|C{2cm}|C{4cm}|C{3cm}|C{6cm}|C{4cm}|C{2cm}|C{2cm}|C{4cm}|C{4cm}|C{2cm}|C{2cm}|C{4cm}|C{2cm}|C{5cm}|C{5cm}|C{2cm}|C{3cm}|C{6cm}|C{2cm}|C{2cm}|C{2cm}|C{4cm}|C{2cm}|}\n';
+    '\\begin{longtable}{|C{1.28cm}|C{1.28cm}|C{1.28cm}|C{1.28cm}|C{1.28cm}|C{1.28cm}|C{1.92cm}|C{2.56cm}|C{1.92cm}|C{1.92cm}|C{1.92cm}|C{1.28cm}|C{2.56cm}|C{1.92cm}|C{1.28cm}|C{2.56cm}|C{1.92cm}|C{3.84cm}|C{2.56cm}|C{1.28cm}|C{1.28cm}|C{2.56cm}|C{2.56cm}|C{1.28cm}|C{1.28cm}|C{2.56cm}|C{1.28cm}|C{3.20cm}|C{3.20cm}|C{1.28cm}|C{1.92cm}|C{3.84cm}|C{1.28cm}|C{1.28cm}|C{1.28cm}|C{2.56cm}|C{1.28cm}|}\n';
   //                      1       2       3     4       5       6     7     8       9     10    11      12      13    14    15      16      17    18     19     20     21     22     23      24     25     26     27     28     29     30     31     32     33     34    35     36    37
   latexTable += '\\hline\n';
   latexTable +=

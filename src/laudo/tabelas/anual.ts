@@ -1,11 +1,11 @@
 function resumoAnualHeader(): string {
   let latexTable = '';
   latexTable += '\\newpage';
-  latexTable += '\\large\\textbf{Resumo Anual}';
-  latexTable += '\\begin{longtable}{|C{3cm}|C{5cm}|C{6cm}|C{5cm}|}\n';
+  latexTable += '\\Huge\\textbf{Resumo Anual}';
+  latexTable += '\\begin{longtable}{|C{3cm}|C{8cm}|C{12cm}|C{10cm}|}\n';
   latexTable += '\\hline\n';
   latexTable +=
-    '\\multirow{2}{*}{\\large\\textbf{Ano}} & \\multirow{2}{*}{\\large\\textbf{IVR/Tunep (R\\$)}} & \\multirow{2}{*}{\\large\\textbf{Correção Monetária (R\\$)}} & \\multirow{2}{*}{\\large\\textbf{Total IVR/Tunep (R\\$)}} \\\\[2mm]\n';
+    '\\multirow{2}{*}{\\textbf{Ano}} & \\multirow{2}{*}{\\textbf{IVR/Tunep (R\\$)}} & \\multirow{2}{*}{\\textbf{Correção Monetária (R\\$)}} & \\multirow{2}{*}{\\textbf{Total IVR/Tunep (R\\$)}} \\\\[2mm]\n';
   latexTable += '\\hline\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';

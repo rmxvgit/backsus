@@ -1,14 +1,12 @@
-export interface HeaderParams {}
-
 function getMensalHeader(): string {
   let latexTable = '';
   latexTable += '\\newpage';
-  latexTable += '\\large\\textbf{Cálculo IVR/TUNEP - Mensal}';
-  latexTable += '\\small'
-  latexTable += '\\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}\n';
-  latexTable += '\\begin{longtable}{|C{2.2cm}|C{10cm}|C{1.2cm}|C{1.5cm}|C{1.5cm}|C{2cm}|C{2cm}|C{2cm}|}\n';
+  latexTable += '\\LARGE\\textbf{Cálculo IVR/TUNEP - Mensal}';
+  latexTable +=
+    '\\begin{longtable}{|C{8.0cm}|C{32.0cm}|C{3.8cm}|C{4.8cm}|C{4.8cm}|C{6.4cm}|C{6.4cm}|C{6.4cm}|}\n';
   latexTable += '\\hline\n';
-  latexTable +='\\textbf{Código} & \\textbf{Descrição do Procedimento} & \\textbf{Mês/Ano} & \\textbf{Valor Base (R\\$)} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{Correção} & \\textbf{Total} \n';
+  latexTable +=
+    '\\textbf{Código} & \\textbf{Descrição do Procedimento} & \\textbf{Mês/Ano} & \\textbf{Valor Base (R\\$)} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{Correção} & \\textbf{Total} \n';
   latexTable += '\\hline\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';

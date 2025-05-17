@@ -34,8 +34,9 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
   \\newcolumntype{C}[1]{>{\\centering\\arraybackslash}m{#1}}
 
   \\geometry{
-      paperwidth=60cm,
-      paperheight=60cm
+      paperwidth=100cm,
+      paperheight=100cm,
+      landscape,
       left=10mm,
       right=10mm,
       top=10mm,
@@ -47,13 +48,12 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
 
   \\begin{document}
 
-      \\pagestyle{empty}
+    \\pagestyle{empty}
 
-      \\begin{landscape}
+    \\section*{Laudo Quantitativo}
+    \\subsection*{Cálculo IVR/TUNEP}
 
-          \\section*{Laudo Quantitativo}
-          \\subsection*{Cálculo IVR/TUNEP}
-
+    \\LARGE
     \\textbf{1) POLO ATIVO}
 
     \\begin{tabular}{l l}
@@ -110,10 +110,8 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
 
     \\newpage
     \\textbf{Resumo Total}
-    \\normalsize
     \\setlength{\\tabcolsep}{8pt}
     \\renewcommand{\\arraystretch}{1.5}
-    \\scriptsize
     \\newcolumntype{C}[1]{>{\\centering\\arraybackslash}p{#1}}`;
 
   return header;
