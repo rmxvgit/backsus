@@ -1,6 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Res,
+} from '@nestjs/common';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
 import { LaudoService } from './laudo.service';
+import { Response } from 'express';
 
 @Controller('laudo')
 export class LaudoController {
@@ -27,8 +36,14 @@ export class LaudoController {
   }
 
   @Get('dowload:id')
-  dowload(@Param('id') id: string) {
-    return this.laudoService.download(id);
+  async dowload(@Param('id') id: string, @Res() res: Response) {
+    const stream = await this.laudoService.download(+id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment;filename=laudo.pdf',
+    });
+
+    stream.pipe(res);
   }
 
   @Delete(':id')

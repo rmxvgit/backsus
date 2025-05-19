@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DirsHandler, LAUDOS_DIR } from 'src/project_structure/dirs';
 import { exec, ExecException, execSync } from 'child_process';
-import { existsSync, unlinkSync, writeFileSync } from 'fs';
+import { createReadStream, existsSync, unlinkSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { PrismaService } from 'src/prisma.service';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
 import { getFinalDocument } from './tabelas/documentoFinal';
 import { ProjUtils } from 'src/project_utils/utils';
+import { ReadStream } from 'fs';
 
 export interface LaudoInfo {
   id: number;
@@ -40,12 +41,23 @@ export interface HospitalInfo {
 export class LaudoService {
   constructor(private prisma: PrismaService) {}
 
-  download(id: string) {
-    console.log(id);
+  async download(id: number): Promise<ReadStream> {
+    const laudo = ProjUtils.Unwrap(
+      await this.prisma.laudo.findUnique({ where: { id: id } }),
+    );
+
+    if (!laudo.ready) {
+      throw Error('laudo não está pronto ainda');
+    }
+
+    const pdf_path = join(LAUDOS_DIR, `${laudo.file_name}.pdf`);
+
+    return createReadStream(pdf_path);
   }
 
   async handleMakeRequest(dto: CreateLaudoDto) {
     console.log('Requisição de criação de laudo:');
+    console.log(dto);
 
     const cnes = parseInt(dto.cnes);
     const laudo_name = `laudo${dto.cnes}${dto.data_inicio}${dto.data_fim}`;
