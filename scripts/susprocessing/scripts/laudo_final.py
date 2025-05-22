@@ -18,8 +18,11 @@ def combinar_csvs(diretorio: str, saida: str):
 
     for arquivo in arquivos:
         caminho_arquivo = os.path.join(diretorio, arquivo)
-        
-        df = pd.read_csv(caminho_arquivo, skiprows=1, sep=";", header=None)
+        try:
+            df = pd.read_csv(caminho_arquivo, skiprows=1, sep=";", header=None)
+        except Exception as e:
+            print("WARNING: Erro ao unir um dos arquivos, (não esquenta com essa poha):", str(e))
+            continue
 
         if df.shape[1] != 9:
             print(f"Erro: {arquivo} tem {df.shape[1]} colunas em vez de 9! Pulando esse arquivo.")
@@ -37,7 +40,7 @@ def combinar_csvs(diretorio: str, saida: str):
 
 def calculo_IVR_TUNEP(arquivo: str, arquivo_saida: str):
     df = pd.read_csv(arquivo, sep=';', header=None, encoding='utf-8-sig')
-    df.columns = ['Cód. procedimento', 'Desc. Procedimento', 'Mês/Ano', 'Valor Base (R$)', 'Qtd. Base', 
+    df.columns = ['Cód. procedimento', 'Desc. Procedimento', 'Mês/Ano', 'Valor Base (R$)', 'Qtd. Base',
                   'IVR/Tunep (R$)', 'Correção', 'Total', 'Base SUS']
 
     df_filtrado = df[df['Cód. procedimento'] != "00.00.00.0na-n"].reset_index(drop=True)
@@ -52,12 +55,12 @@ def calculo_IVR_TUNEP_individualizado(arquivo: str, arquivo_saida: str):
     colunas_formatar = ['Valor Base (R$)', 'IVR/Tunep (R$)', 'Correção', 'Total']
     df = formatar_valores(df, colunas_formatar)
     df.to_csv(arquivo_saida, index=False, sep=";", encoding='utf-8-sig')
-    
+
 def calculo_IVR_TUNEP_mensal(arquivo: str, arquivo_saida: str):
     df = pd.read_csv(arquivo, sep=';', encoding='utf-8-sig')
     df = df.drop(columns=['Base SUS'])
     df = df[df['IVR/Tunep (R$)'] > 0]
-    df = formatar_datas(df, 'Mês/Ano') 
+    df = formatar_datas(df, 'Mês/Ano')
 
     colunas_numericas = ['Valor Base (R$)', 'Qtd. Base', 'IVR/Tunep (R$)', 'Correção']
     df[colunas_numericas] = df[colunas_numericas].astype(float)

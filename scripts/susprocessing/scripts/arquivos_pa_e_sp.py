@@ -16,8 +16,11 @@ def combinar_csvs(diretorio: str, saidapa: str, saidasp: str):
 
     for arquivo in arquivos:
         caminho_arquivo = os.path.join(diretorio, arquivo)
-
-        df = pd.read_csv(caminho_arquivo, skiprows=1, sep=",", header=None)
+        try:
+            df = pd.read_csv(caminho_arquivo, skiprows=1, sep=",", header=None)
+        except Exception as e:
+            print("WARNING: Erro ao unir um dos arquivos, (não esquenta com essa poha):", str(e))
+            continue
 
         if df.shape[1] == 60:
             df_pa.append(df)
