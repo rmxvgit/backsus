@@ -9,7 +9,6 @@ function individualizadaHeader(): string {
     '\\textbf{Cód. Procedimento} & \\textbf{Desc. Procedimento} &\\textbf{Mês/Ano} & \\textbf{Valor Base} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} &\\textbf{Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} & \\textbf{Base SUS}\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
-  latexTable += '\\endfoot\n';
   return latexTable;
 }
 

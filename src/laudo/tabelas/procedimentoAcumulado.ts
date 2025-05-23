@@ -4,13 +4,12 @@ function procedimentoAcumuladoHeader(): string {
   latexTable += '\\huge';
   latexTable += '\\textbf{Cálculo IVR/TUNEP - Acumulado}';
   latexTable +=
-    '\\begin{longtable}{|C{7.2cm}|C{26.4cm}|C{7.2cm}|C{7.2cm}|C{7.2cm}|C{7.2cm}|C{7.2cm}|}\n';
+    '\\begin{longtable}{|C{7.2cm}|C{26.4cm}|C{7.2cm}|C{7.2cm}|C{7.2cm}|C{9cm}|C{7.2cm}|}\n';
   latexTable += '\\hline\n';
   latexTable +=
     '\\textbf{Cód. Procedimento} & \\textbf{Desc. Procedimento} & \\textbf{Valor Base} & \\textbf{Qtd. Base} & \\textbf{IVR/Tunep (R\\$)} &\\textbf{Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)}\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
-  latexTable += '\\endfoot\n';
   return latexTable;
 }
 
