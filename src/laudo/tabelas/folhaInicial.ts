@@ -72,7 +72,7 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
     \\hline
     \\textbf{Número Processo:} & ${params.numeroProcesso} \\\\
     \\hline
-    \\textbf{Data de Distribuição:} & ${params.dataDistribuicao} \\\\
+    \\textbf{Data de Distribuição:} & ${params.dataDistribuicao.toString()} \\\\
     \\hline
     \\end{tabular}
 

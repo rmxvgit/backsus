@@ -90,13 +90,13 @@ export function getFinalDocument(params: finalDocParams): string[] {
   return [
     header +
       resumoTotal +
-      // resumo_anual +
-      // resumoMes +
-      // procedimentoAcumulado +
-      // mensal +
-      // individualizada +
-      // arquivosSP +
-      // arquivosPA +
+      resumo_anual +
+      resumoMes +
+      procedimentoAcumulado +
+      mensal +
+      individualizada +
+      arquivosSP +
+      arquivosPA +
       endDocument,
     total,
   ];
