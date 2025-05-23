@@ -94,7 +94,7 @@ export class LaudoService {
     // Execução do script e geração do pdf
     this.makeLaudo(laudo, hospital);
 
-    return 'solicitação de geração de laudo concluida com sucesso';
+    return laudo;
   }
 
   makeLaudo(laudo: LaudoInfo, hospital: HospitalInfo) {
@@ -202,7 +202,10 @@ export class LaudoService {
       try {
         // Se já existir, atualiza para ready: false
         output = await this.prisma.laudo.update({
-          where: { file_name: laudo.file_name },
+          where: {
+            file_name: laudo.file_name,
+            data_distribuicao: laudo.data_distribuicao,
+          },
           data: { ready: false },
         });
         console.log('Laudo atualizado na database.');
@@ -214,6 +217,10 @@ export class LaudoService {
   }
 
   private generatePdf(laudo: LaudoInfo, hospital: HospitalInfo): string {
+    if (laudo.data_distribuicao instanceof Date) {
+      laudo.data_distribuicao = ProjUtils.DateToString(laudo.data_distribuicao);
+    }
+
     const [texContent, valorFinal] = getFinalDocument({
       razaoSocial: hospital.name,
       nomeFantasia: hospital.name,
@@ -222,7 +229,7 @@ export class LaudoService {
       cidade: laudo.cidade,
       estado: hospital.estado,
       numeroProcesso: ProjUtils.Unwrap(laudo.numero_processo),
-      dataDistribuicao: ProjUtils.Unwrap(laudo.data_distribuicao).toString(),
+      dataDistribuicao: laudo.data_distribuicao,
     });
 
     // Salva o arquivo .tex
