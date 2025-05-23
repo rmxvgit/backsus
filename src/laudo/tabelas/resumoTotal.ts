@@ -7,7 +7,6 @@ function resumoTotalHeader(): string {
     '\\textbf{IVR/Tunep (R\\$)} & \\textbf{ Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} \n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
-  latexTable += '\\endfoot\n';
   return latexTable;
 }
 

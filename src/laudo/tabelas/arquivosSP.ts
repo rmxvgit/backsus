@@ -9,10 +9,8 @@ function filesSP(): string {
   latexTable += '\\hline\n';
   latexTable +=
     '\\textbf{Linha} & \\textbf{SP\\_GESTOR} & \\textbf{SP\\_UF} & \\textbf{SP\\_AA} & \\textbf{SP\\_MM} & \\textbf{SP\\_CNES} & \\textbf{SP\\_NAIH} & \\textbf{SP\\_PROCREA} & \\textbf{SP\\_DTINTER} & \\textbf{SP\\_DTSAIDA} & \\textbf{SP\\_NUM\\_PR} & \\textbf{SP\\_TIPO} & \\textbf{SP\\_CPFCGC} & \\textbf{SP\\_ATOPROF} & \\textbf{SP\\_TP\\_ATO} & \\textbf{SP\\_QTD\\_ATO} & \\textbf{SP\\_PTSP} & \\textbf{SP\\_NF} & \\textbf{SP\\_VALATO} & \\textbf{SP\\_M\\_HOSP} & \\textbf{SP\\_M\\_PAC} & \\textbf{SP\\_DES\\_HOS} & \\textbf{SP\\_DES\\_PAC} & \\textbf{SP\\_COMPLEX} & \\textbf{SP\\_FINANC} & \\textbf{SP\\_CO\\_FAEC} & \\textbf{SP\\_PF\\_CBO} & \\textbf{SP\\_PF\\_DOC} & \\textbf{SP\\_PJ\\_DOC} & \\textbf{IN\\_TP\\_VAL} & \\textbf{SEQUENCIA} & \\textbf{REMESSA} & \\textbf{SERV\\_CLA} & \\textbf{SP\\_CIDPRI} & \\textbf{SP\\_CIDSEC} & \\textbf{SP\\_QT\\_PROC} & \\textbf{SP\\_U\\_AIH}\\\\\n';
-  latexTable += '\\hline\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
-  latexTable += '\\endfoot\n';
   return latexTable;
 }
 
