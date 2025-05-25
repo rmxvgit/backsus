@@ -6,12 +6,15 @@ import {
   Param,
   Post,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
 import { LaudoService } from './laudo.service';
 import { Response } from 'express';
+import { LoggedGuard } from 'src/auth/guard';
 
 @Controller('laudo')
+@UseGuards(LoggedGuard)
 export class LaudoController {
   constructor(private readonly laudoService: LaudoService) {}
 

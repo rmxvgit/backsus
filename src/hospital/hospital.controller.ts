@@ -6,12 +6,15 @@ import {
   /*Patch,*/
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { HospitalService } from './hospital.service';
 import { CreateHospitalDto } from './dto/create-hospital.dto';
+import { LoggedGuard } from 'src/auth/guard';
 //import { UpdateHospitalDto } from './dto/update-hospital.dto';
 
 @Controller('hospital')
+@UseGuards(LoggedGuard)
 export class HospitalController {
   constructor(private readonly hospitalService: HospitalService) {}
 

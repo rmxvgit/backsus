@@ -42,3 +42,8 @@ model Laudo {
   data_update       DateTime @default(now())
   valor_final       String?
 }
+
+model User {
+  email String @unique
+  senha String
+}
