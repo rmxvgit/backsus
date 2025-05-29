@@ -19,19 +19,17 @@ function filesPABody(data: string): string {
   let body: string = '';
 
   for (let i = 0; i < lines.length; i++) {
-    if (i % 10 == 0) {
-      if (lines[i].trim() === '') continue;
+    if (lines[i].trim() === '') continue;
 
-      const columns = lines[i].split(',');
-      if (columns.length < 61) continue;
-      let row = '';
-      for (let j = 0; j < columns.length; j++) {
-        const value = columns[j].trim() === '' ? ' ' : columns[j].trim();
-        row += `${value} ${j < columns.length - 1 ? '& ' : ''}`;
-      }
-
-      body += `${row}\\\\\\hline\n`;
+    const columns = lines[i].split(',');
+    if (columns.length < 61) continue;
+    let row = '';
+    for (let j = 0; j < columns.length; j++) {
+      const value = columns[j].trim() === '' ? ' ' : columns[j].trim();
+      row += `${value} ${j < columns.length - 1 ? '& ' : ''}`;
     }
+
+    body += `${row}\\\\\\hline\n`;
   }
 
   body += '\\end{longtable}\n';
