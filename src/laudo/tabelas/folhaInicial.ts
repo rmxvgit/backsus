@@ -50,8 +50,12 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
 
     \\pagestyle{empty}
 
-    \\section*{Laudo Quantitativo}
-    \\subsection*{Cálculo IVR/TUNEP}
+    \\begin{center}
+    \\section*{\\fontsize{40}{19}\\bfseries\\scshape Laudo Quantitativo}
+    \\subsection*{\\fontsize{25}{17}\\bfseries Cálculo IVR/TUNEP}
+    \\end{center}
+
+    \\vspace{10mm}
 
     \\LARGE
     \\textbf{1) POLO ATIVO}
@@ -72,21 +76,19 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
     \\hline
     \\textbf{Número Processo:} & ${params.numeroProcesso} \\\\
     \\hline
-    \\textbf{Data de Distribuição:} & ${params.dataDistribuicao.toString()} \\\\
+    \\textbf{Data de Distribuição:} & ${params.dataDistribuicao} \\\\
     \\hline
     \\end{tabular}
 
     \\vspace{10mm}
 
     \\textbf{2) POLO PASSIVO}
-
-    \\begin{tabular}{l l}
-    \\hline
-    \\textbf{UNIÃO FEDERAL:} & \\\\
-    \\hline
-    \\textbf{CNPJ:} & 00.394.411/0001-09 \\\\
-    \\hline
-    \\end{tabular}
+    \\begin{quote}
+    \\begin{description}
+    \\item[UNIÃO FEDERAL:]  \\
+    \\item[CNPJ:] ${params.cnpj} \\
+    \\end{description}
+    \\end{quote}
 
     \\vspace{10mm}
 

@@ -1,14 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { DirsHandler, LAUDOS_DIR } from 'src/project_structure/dirs';
 import { exec, ExecException, execSync } from 'child_process';
-import { createReadStream, existsSync, unlinkSync, writeFileSync } from 'fs';
+import {
+  createReadStream,
+  existsSync,
+  ReadStream,
+  unlinkSync,
+  writeFileSync,
+} from 'fs';
 import { join } from 'path';
 import { PrismaService } from 'src/prisma.service';
+import { DirsHandler, LAUDOS_DIR } from 'src/project_structure/dirs';
+import { ProjUtils } from 'src/project_utils/utils';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
 import { getFinalDocument } from './tabelas/documentoFinal';
-import { ProjUtils } from 'src/project_utils/utils';
-import { ReadStream } from 'fs';
 
 export interface LaudoInfo {
   id: number;
@@ -101,7 +106,7 @@ export class LaudoService {
     // Executa o script Python para processar os dados
     exec(
       //TODO: conferir se a chamada está correta
-      `python3 scripts/susprocessing/scripts/pull.py BOTH ${hospital.estado} ${laudo.data_inicio} ${laudo.data_fim} ${hospital.cnes}`,
+      `python3 scripts/susprocessing/scripts/pull.py BOTH ${hospital.estado} ${laudo.data_inicio} ${laudo.data_fim} ${hospital.cnes} ${laudo.ivr_tunep}`,
       (error, stdout, stderr) => {
         this.handleScriptConclusion(error, stdout, stderr, laudo, hospital);
       },
@@ -298,7 +303,7 @@ export class LaudoService {
       id: 10,
       data_inicio: '12-16',
       data_fim: '12-16',
-      file_name: 'batata.pdf',
+      file_name: 'batata',
       nome_fantasia: 'fantasia',
       razao_social: 'razao social',
       data_fim_correcao: '12-23',

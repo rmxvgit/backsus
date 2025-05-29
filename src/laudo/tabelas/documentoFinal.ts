@@ -39,14 +39,8 @@ export function getFinalDocument(params: finalDocParams): string[] {
   }
 
   // Ler o arquivo CSV
-  const csv_arquivossp = readFileSync(
-    pathToData('arquivos_sp_reunidos.csv'),
-    'utf-8',
-  );
-  const csv_arquivospa = readFileSync(
-    pathToData('arquivos_pa_reunidos.csv'),
-    'utf-8',
-  );
+  const csv_arquivossp = readFileSync(pathToData('amostra_sp.csv'), 'utf-8');
+  const csv_arquivospa = readFileSync(pathToData('amostra_pa.csv'), 'utf-8');
 
   const csv_individualizada = readFileSync(
     pathToData('calculo_IVR_TUNEP_individualizado.csv'),

@@ -1,13 +1,8 @@
 import os
+
+import numpy as np
 import pandas as pd
 
-# localizar arquivos de PA e SP em sua pasta ok
-# ver qual o tipo do arquivo(PA e SP) ok
-# juntar arquivos de acordo com o tipo em ordem de data crescente e com index ok
-# colocar esses arquivos em um csv la pasta laudos ok
-# fazer função para ler esse df e logo apos pegar 5 linhas de cada mes aleatoriamente e colocar em um csv
-
-# em TS: passar tabelas para formato pdf com latex =)
 
 def combinar_csvs(diretorio: str, saidapa: str, saidasp: str):
     arquivos = [f for f in os.listdir(diretorio) if f.endswith('.csv')]
@@ -16,11 +11,9 @@ def combinar_csvs(diretorio: str, saidapa: str, saidasp: str):
 
     for arquivo in arquivos:
         caminho_arquivo = os.path.join(diretorio, arquivo)
-        try:
-            df = pd.read_csv(caminho_arquivo, skiprows=1, sep=",", header=None)
-        except Exception as e:
-            print("WARNING: Erro ao unir um dos arquivos, (não esquenta com essa poha):", str(e))
-            continue
+
+        df = pd.read_csv(caminho_arquivo, sep=",", header=None, dtype=str)
+        df = df[1:]
 
         if df.shape[1] == 60:
             df_pa.append(df)
@@ -44,7 +37,34 @@ def combinar_csvs(diretorio: str, saidapa: str, saidasp: str):
     else:
         print("Nenhum arquivo válido foi encontrado para combinar em arquivos SP.")
 
+def amostra_pa(arquivo: str, saida: str):
+    df = pd.read_csv(arquivo, sep=',', header=None, dtype=str)
+    
+    df[14] = df[14].astype(str)
+    
+    grupo_col = 14
+    amostra = df.groupby(grupo_col, group_keys=False).apply(lambda x: x.sample(n=min(len(x), 5), random_state=42), include_groups=True).reset_index(drop=True)
 
+    amostra = amostra.reset_index(drop=True)
+    
+    amostra.to_csv(saida, index=False, header=False, sep=",")
+    
+def amostra_sp(arquivo: str, saida: str):
+    df = pd.read_csv(arquivo, sep=',', header=None, dtype=str)
+
+    def amostrar(grupo):
+        return grupo.sample(n=min(5, len(grupo)), random_state=42)
+
+    grupos = df.groupby([3, 4])
+    amostra = grupos.apply(amostrar)
+    amostra = amostra.reset_index(drop=True)
+
+    print(amostra)
+    amostra.to_csv(saida, index=False, header=False, sep=",")
+    
+    
 def main(csv_file_path: str, path_laudos: str):
-    print(csv_file_path)
     combinar_csvs(f"{csv_file_path}/", f"{path_laudos}/arquivos_pa_reunidos.csv", f"{path_laudos}/arquivos_sp_reunidos.csv")
+    amostra_pa(f"{path_laudos}/arquivos_pa_reunidos.csv", f"{path_laudos}/amostra_pa.csv")
+    amostra_sp(f"{path_laudos}/arquivos_sp_reunidos.csv", f"{path_laudos}/amostra_sp.csv")
+    
