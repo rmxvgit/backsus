@@ -14,7 +14,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: login_data.email, senha: login_data.senha },
     });
-
+    console.log(user);
     if (user != null) {
       return this.jwtService.sign({ email: user.email });
     }

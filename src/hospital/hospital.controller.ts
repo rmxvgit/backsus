@@ -42,6 +42,7 @@ export class HospitalController {
 
   @Delete(':cnes')
   remove(@Param('cnes') id: string) {
+    console.log(id);
     return this.hospitalService.remove(+id);
   }
 }
