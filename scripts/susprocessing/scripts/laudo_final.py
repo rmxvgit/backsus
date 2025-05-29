@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 
+'IVR/Tunep (R$)'
 
 def formatar_valores(df, colunas):
     for coluna in colunas:
@@ -24,7 +25,7 @@ def combinar_csvs(diretorio: str, saida: str):
             print("WARNING: Erro ao unir um dos arquivos, (não esquenta com essa poha):", str(e))
             continue
 
-        if df.shape[1] != 9:
+        if df.shape[1] != 10:
             print(f"Erro: {arquivo} tem {df.shape[1]} colunas em vez de 9! Pulando esse arquivo.")
             continue
 
@@ -38,21 +39,24 @@ def combinar_csvs(diretorio: str, saida: str):
     else:
         print("Nenhum arquivo válido foi encontrado para combinar.")
 
-def calculo_IVR_TUNEP(arquivo: str, arquivo_saida: str):
+def calculo_IVR_TUNEP(arquivo: str, arquivo_saida: str, arquivo_saida_tunep_ivr: str):
     df = pd.read_csv(arquivo, sep=';', header=None, encoding='utf-8-sig')
-    df.columns = ['Cód. procedimento', 'Desc. Procedimento', 'Mês/Ano', 'Valor Base (R$)', 'Qtd. Base',
-                  'IVR/Tunep (R$)', 'Correção', 'Total', 'Base SUS']
+    df.columns = ['Cód. procedimento', 'Desc. Procedimento', 'Mês/Ano', 'Valor Base (R$)', 'Qtd. Base', 'IVR (R$)','TUNEP (R$)', 'Correção', 'Total', 'Base SUS']
 
     df_filtrado = df[df['Cód. procedimento'] != "00.00.00.0na-n"].reset_index(drop=True)
     df_filtrado['Mês/Ano'] = pd.to_datetime(df_filtrado['Mês/Ano'], format='%m/%Y').dt.strftime('%Y-%m')
     df_sorted = df_filtrado.sort_values(by=['Cód. procedimento', 'Mês/Ano']).reset_index(drop=True)
 
     df_sorted.to_csv(arquivo_saida, index=False, sep=";", encoding='utf-8-sig')
+    
+    df_sorted['IVR/Tunep (R$)'] = df_sorted['IVR (R$)'] + df_sorted['TUNEP (R$)']
+    df_tunep_ivr = df_sorted[['Cód. procedimento', 'Desc. Procedimento', 'Mês/Ano', 'Valor Base (R$)', 'Qtd. Base', 'IVR/Tunep (R$)', 'Correção', 'Total', 'Base SUS']]
+    df_tunep_ivr.to_csv(arquivo_saida_tunep_ivr, index=False, sep=";", encoding='utf-8-sig')
 
 def calculo_IVR_TUNEP_individualizado(arquivo: str, arquivo_saida: str):
     df = pd.read_csv(arquivo, sep=';', encoding='utf-8-sig')
     df = formatar_datas(df, 'Mês/Ano')
-    colunas_formatar = ['Valor Base (R$)', 'IVR/Tunep (R$)', 'Correção', 'Total']
+    colunas_formatar = ['Valor Base (R$)', 'IVR (R$)','TUNEP (R$)', 'Correção', 'Total']
     df = formatar_valores(df, colunas_formatar)
     df.to_csv(arquivo_saida, index=False, sep=";", encoding='utf-8-sig')
 
@@ -128,10 +132,10 @@ def resumo_total(arquivo: str, arquivo_saida: str):
 def main(csv_file_path: str, path_laudos: str):
     print(csv_file_path)
     combinar_csvs(f"{csv_file_path}/", f"{path_laudos}/resultado_final.csv")
-    calculo_IVR_TUNEP(f"{path_laudos}/resultado_final.csv", f"{path_laudos}/resultado_final_filt.csv")
+    calculo_IVR_TUNEP(f"{path_laudos}/resultado_final.csv", f"{path_laudos}/resultado_final_filt.csv", f"{path_laudos}/resultado_final_filt_ivr_tunep.csv")
     calculo_IVR_TUNEP_individualizado(f"{path_laudos}/resultado_final_filt.csv", f"{path_laudos}/calculo_IVR_TUNEP_individualizado.csv")
-    calculo_IVR_TUNEP_mensal(f"{path_laudos}/resultado_final_filt.csv", f"{path_laudos}/calculo_IVR_TUNEP_mensal.csv")
-    total_por_procedimento_acumulado(f"{path_laudos}/resultado_final_filt.csv", f"{path_laudos}/total_por_procedimento_acumulado.csv")
-    resumo_mes(f"{path_laudos}/resultado_final_filt.csv", f"{path_laudos}/resumo_mes.csv")
-    resumo_ano(f"{path_laudos}/resultado_final_filt.csv", f"{path_laudos}/resumo_ano.csv")
-    resumo_total(f"{path_laudos}/resultado_final_filt.csv", f"{path_laudos}/resumo_total.csv")
+    calculo_IVR_TUNEP_mensal(f"{path_laudos}/resultado_final_filt_ivr_tunep.csv", f"{path_laudos}/calculo_IVR_TUNEP_mensal.csv")
+    total_por_procedimento_acumulado(f"{path_laudos}/resultado_final_filt_ivr_tunep.csv", f"{path_laudos}/total_por_procedimento_acumulado.csv")
+    resumo_mes(f"{path_laudos}/resultado_final_filt_ivr_tunep.csv", f"{path_laudos}/resumo_mes.csv")
+    resumo_ano(f"{path_laudos}/resultado_final_filt_ivr_tunep.csv", f"{path_laudos}/resumo_ano.csv")
+    resumo_total(f"{path_laudos}/resultado_final_filt_ivr_tunep.csv", f"{path_laudos}/resumo_total.csv")

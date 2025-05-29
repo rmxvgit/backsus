@@ -87,57 +87,6 @@ def correcao_absoluta(data_inicio: Tdata, data_fim: Tdata, selic_arr: list[float
     print(correcao_ipcae(data_inicio, data_fim))
     return CalculaSelic(data_inicio, data_fim, selic_arr)*correcao_ipcae(data_inicio, data_fim)
 
-
-
-def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: Tdata, data_fim: Tdata):
-    selic_arr = getSelic()
-    taxa_de_correcao_para_esse_mes = correcao_absoluta(data_inicio, data_fim, selic_arr)
-
-    porcentagem_de_correcao = (taxa_de_correcao_para_esse_mes - 1)*100
-
-    df_main = pd.read_csv(csv_file_path, encoding='utf-8-sig', low_memory=False)
-    df_proc = pd.read_csv(get_path('dados', 'desc_procedimento.csv'))
-    df_tunep = pd.read_csv(get_path('dados', 'tabela_tunep_mais_origem.csv'))
-
-    df_filt = df_main[['SP_AA', 'SP_MM', 'SP_VALATO', 'SP_ATOPROF', 'SP_QTD_ATO']]
-
-    df_filt = df_filt[df_filt['SP_QTD_ATO'] > 0]
-    # df_filt = df_filt[df_filt['SP_VALATO'] > 0]
-
-    df_sum = df_filt.groupby(['SP_AA', 'SP_MM', 'SP_ATOPROF'],  as_index=False).agg({'SP_VALATO': 'sum', 'SP_QTD_ATO': 'sum'})
-    df_sum = df_sum.sort_values(by='SP_ATOPROF')
-
-    df_sum['SP_ATOPROF'] = df_sum['SP_ATOPROF'].astype(str)
-    df_proc['CO_PROCEDIMENTO'] = df_proc['CO_PROCEDIMENTO'].astype(str)
-
-    df_desc = pd.merge(df_sum, df_proc, left_on='SP_ATOPROF', right_on='CO_PROCEDIMENTO', how='left')
-    df_desc = df_desc[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'SP_AA', 'SP_MM', 'SP_VALATO', 'SP_QTD_ATO']]
-
-    df_desc["IVR"] = df_desc["SP_VALATO"] * 0.5
-
-    df_desc['CO_PROCEDIMENTO'] = df_desc['CO_PROCEDIMENTO'].astype(str)
-    df_tunep['TP_PROCEDIMENTO'] = df_tunep['TP_PROCEDIMENTO'] == 'H'
-    df_tunep['CO_PROCEDIMENTO'] = df_tunep['CO_PROCEDIMENTO'].astype(str)
-    df_desc = pd.merge(df_desc, df_tunep, on='CO_PROCEDIMENTO', how='left').fillna(0)
-
-    df_desc['ValorTUNEP'] = pd.to_numeric(df_desc['ValorTUNEP'].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
-    comp_valor = df_desc['SP_QTD_ATO'] * df_desc['ValorTUNEP']
-    df_desc['IVR/Tunep'] = np.where(comp_valor > df_desc['IVR'], comp_valor, df_desc['IVR'])
-    df_desc['correcao'] = df_desc['IVR/Tunep'] * (taxa_de_correcao_para_esse_mes -1)
-    df_desc['Total'] = df_desc['IVR/Tunep'] * taxa_de_correcao_para_esse_mes
-
-    df_desc['CO_PROCEDIMENTO'] = df_desc['CO_PROCEDIMENTO'].astype(str).str.zfill(10)
-    df_desc['CO_PROCEDIMENTO'] = df_desc['CO_PROCEDIMENTO'].str[:2] + "." + df_desc['CO_PROCEDIMENTO'].str[2:4] + "." + df_desc['CO_PROCEDIMENTO'].str[4:6] + "." + df_desc['CO_PROCEDIMENTO'].str[6:9] + "-" + df_desc['CO_PROCEDIMENTO'].str[9]
-    df_desc["Mês/Ano"] = df_desc["SP_MM"].astype(str).str.zfill(2) + "/" + df_desc["SP_AA"].astype(str)
-    df_desc['Base SUS'] = 'SIHSUS'
-
-    df_final = df_desc[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'Mês/Ano', 'SP_VALATO', 'SP_QTD_ATO', 'IVR/Tunep', 'correcao', 'Total', 'Base SUS']].rename(
-        columns = {'CO_PROCEDIMENTO': 'Procedimentos', 'NO_PROCEDIMENTO': 'Desc. Procedimento', 'SP_VALATO': 'Valor Base (R$)', 'SP_QTD_ATO': ' Qtd. Base', 'IVR/Tunep': 'IVR/Tunep (R$)', 'correcao' :'Correção'})
-    print(df_final)
-
-    df_final.to_csv(f"{output_file_path}", sep=';', index=False,  encoding='utf-8-sig')
-    print(f"Resultado salvo em: {output_file_path}")
-
 def to_time(data: str) -> dict[str, int]:
     month_year = [int(x) for x in data.split('-')]
     if month_year[1] < 1900:
@@ -153,16 +102,127 @@ def get_current_data() -> dict[str, int]:
     today = {'year': now.tm_year, 'month': now.tm_mon}
     return today
 
-def main():
-    if len(sys.argv) != 4:
-        #TODO: escrever o uso correto do programa
-        print("Uso: python processar_dados.py <caminho_do_csv>")
-        exit(1)
+#começo
 
-    csv_file_path = sys.argv[1]
-    output_file_path = sys.argv[2]
+def obter_taxa_correcao(data_inicio: Tdata, data_fim: Tdata) -> float:
+    selic_arr = getSelic()
+    taxa_correcao = correcao_absoluta(data_inicio, data_fim, selic_arr)
+    return taxa_correcao
 
-    data_inicio = to_time(sys.argv[3])
-    data_fim = get_current_data() #TODO: passar dados por parâmetro assim como para data_início
+def carregar_e_preparar_dados(caminho_arquivo_csv: str) -> pd.DataFrame:
+    df = pd.read_csv(caminho_arquivo_csv, encoding='utf-8-sig', low_memory=False)
+    df_filt = df[['SP_AA', 'SP_MM', 'SP_VALATO', 'SP_ATOPROF', 'SP_QTD_ATO']]
+    df_filt = df_filt[df_filt['SP_QTD_ATO'] > 0]
+    # df_filt = df_filt[df_filt['SP_VALATO'] > 0]
+    return df_filt
 
-    processar_dados_csv(csv_file_path, output_file_path, data_inicio, data_fim)
+def agregar_ordenar_dados(df: pd.DataFrame) -> pd.DataFrame:
+    df_soma = df.groupby(['SP_AA', 'SP_MM', 'SP_ATOPROF'],  as_index=False).agg({'SP_VALATO': 'sum', 'SP_QTD_ATO': 'sum'})
+    return df_soma.sort_values(by='SP_ATOPROF')
+
+def mesclar_com_desc_procedimentos(df: pd.DataFrame) -> pd.DataFrame:
+    df_procedimentos = pd.read_csv(get_path('dados', 'desc_procedimento.csv'))
+    df['SP_ATOPROF'] = df['SP_ATOPROF'].astype(str)
+    df_procedimentos['CO_PROCEDIMENTO'] = df_procedimentos['CO_PROCEDIMENTO'].astype(str)
+    df_descricao = pd.merge(df, df_procedimentos, left_on='SP_ATOPROF', right_on='CO_PROCEDIMENTO', how='left')
+    df_descricao = df_descricao[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'SP_AA', 'SP_MM', 'SP_VALATO', 'SP_QTD_ATO']]
+    return df_descricao
+
+def calcular_ivr(df: pd.DataFrame) -> pd.DataFrame:
+    df["IVR"] = df["SP_VALATO"] * 0.5
+    return df
+
+def calcular_tunep(df: pd.DataFrame) -> pd.DataFrame:
+    df_tunep = pd.read_csv(get_path('dados', 'tabela_tunep_mais_origem.csv'))
+    df_tunep['TP_PROCEDIMENTO'] = df_tunep['TP_PROCEDIMENTO'] == 'H'
+    df_tunep['CO_PROCEDIMENTO'] = df_tunep['CO_PROCEDIMENTO'].astype(str)
+     
+    df['CO_PROCEDIMENTO'] = df['CO_PROCEDIMENTO'].astype(str)
+    df = pd.merge(df, df_tunep, on='CO_PROCEDIMENTO', how='left').fillna(0)
+    
+    df['ValorTUNEP'] = pd.to_numeric(df['ValorTUNEP'].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
+    df['TUNEP'] = df['SP_QTD_ATO'] * df['ValorTUNEP']
+    return df
+
+def aplicar_correcao(df: pd.DataFrame, data_inicio: Tdata, data_fim: Tdata) -> pd.DataFrame:
+    taxa_correcao = 3 #obter_taxa_correcao(data_inicio, data_fim)
+    df['correcao'] = df['IVR'] * (taxa_correcao - 1) + df['TUNEP'] * (taxa_correcao - 1)
+    df['Total'] = df['IVR'] + df['TUNEP'] + df['correcao']
+    return df
+
+def adicionar_base_sus(df: pd.DataFrame) -> pd.DataFrame:
+    df['Base SUS'] = 'SIHSUS'
+    return df
+
+def formatar_colunas(df: pd.DataFrame) -> pd.DataFrame:
+    # Formatação do código do procedimento
+    df['CO_PROCEDIMENTO'] = df['CO_PROCEDIMENTO'].astype(str).str.zfill(10)
+    df['CO_PROCEDIMENTO'] = (df['CO_PROCEDIMENTO'].str[:2] + "." + 
+                            df['CO_PROCEDIMENTO'].str[2:4] + "." + 
+                            df['CO_PROCEDIMENTO'].str[4:6] + "." + 
+                            df['CO_PROCEDIMENTO'].str[6:9] + "-" + 
+                            df['CO_PROCEDIMENTO'].str[9])
+    # Formatação da data
+    df["Mês/Ano"] = df["SP_MM"].astype(str).str.zfill(2) + "/" + df["SP_AA"].astype(str)
+
+    df = df[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'Mês/Ano', 'SP_VALATO', 'SP_QTD_ATO', 'IVR', 'TUNEP', 'correcao', 'Total', 'Base SUS']].rename(
+        columns = {'CO_PROCEDIMENTO': 'Procedimentos', 'NO_PROCEDIMENTO': 'Desc. Procedimento', 'SP_VALATO': 'Valor Base (R$)', 'SP_QTD_ATO': ' Qtd. Base', 'IVR': 'IVR (R$)', 'TUNEP': 'TUNEP (R$)', 'correcao':'Correção'})
+    
+    return df
+
+def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: Tdata, data_fim: Tdata, tipo_valor: str):
+    
+    df_filt = carregar_e_preparar_dados(csv_file_path)
+
+    df_sum = agregar_ordenar_dados(df_filt)
+    
+    df_desc = mesclar_com_desc_procedimentos(df_sum)
+    
+    if tipo_valor == 'IVR':
+        df_desc = calcular_ivr(df_desc)
+        df_desc["TUNEP"] = 0
+        
+    elif tipo_valor == 'TUNEP':
+        df_desc = calcular_tunep(df_desc)
+        df_desc["IVR"] = 0
+        
+    elif tipo_valor == 'Ambos':
+        df_desc = calcular_ivr(df_desc)
+        df_desc = calcular_tunep(df_desc)
+        ivr_maior = df_desc["IVR"] >= df_desc["TUNEP"]
+        tunep_maior = ~ivr_maior
+
+        df_desc.loc[ivr_maior, "TUNEP"] = 0
+        df_desc.loc[tunep_maior, "IVR"] = 0
+        # Caso queira valor vazio e nao zero
+        # df_desc.loc[ivr_maior, "TUNEP"] = pd.NA
+        # df_desc.loc[~ivr_maior, "IVR"] = pd.NA
+    
+    df_final = aplicar_correcao(df_desc, data_inicio, data_fim)
+    
+    df_final = adicionar_base_sus(df_final)
+    
+    df_final = formatar_colunas(df_final)
+
+    print(df_final)
+
+    df_final.to_csv(f"{output_file_path}", sep=';', index=False,  encoding='utf-8-sig')
+    print(f"Resultado salvo em: {output_file_path}")
+
+
+#final
+
+def to_time(data: str) -> dict[str, int]:
+    month_year = [int(x) for x in data.split('-')]
+    if month_year[1] < 1900:
+        if month_year[1] > 70:
+            month_year[1] += 1900
+        else:
+            month_year[1] += 2000
+    return {'month': month_year[0], 'year': month_year[1]}
+
+
+def get_current_data() -> dict[str, int]:
+    now = t.localtime()
+    today = {'year': now.tm_year, 'month': now.tm_mon}
+    return today

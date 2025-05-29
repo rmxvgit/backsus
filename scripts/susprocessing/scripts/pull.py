@@ -7,15 +7,15 @@ import time as t
 from multiprocessing.dummy import Pool
 from pathlib import Path
 
+import arquivos_pa_e_sp
 import laudo_final
 import pandas as pd
-import arquivos_pa_e_sp
 import processar_dados_sia
 import processar_dados_sih
 import sigtap_procedimento
 from tempo import Tdata
 
-# python3 pull.py SIA RS 01-24 01-24 2248328
+# python3 pull.py BOTH RS 01-24 01-24 2248328 Ambos
 # TODO: descobir como exportar pdf para o front end
 # TODO: reorganizar o codigo para carregar os arquivos sigtap uma vez ao mês, fazer o mesmo para o arquivo da selic
 
@@ -50,11 +50,12 @@ def main():
         data_inicio = Tdata.str_to_data(args[2])
         data_fim = Tdata.str_to_data(args[3])
         cnes = args[4]
+        tipo_valor = args[5]
 
         subdirectory_name = create_subdirectory(cnes, estado)
         if not sigtap(Tdata.data_atual_aaaamm()):
             print("AVISO: Não foi possível carregar arquivos SIGTAP")
-        get_and_process_data(estado, data_inicio, data_fim, sistema, cnes, subdirectory_name)
+        get_and_process_data(estado, data_inicio, data_fim, sistema, cnes, subdirectory_name, tipo_valor)
         unite_files(subdirectory_name)
 
     except Exception as e:
@@ -145,7 +146,7 @@ def create_subdirectory(cnes: str, estado: str):
     return subdirectory_name
 
 def validate_args(args: list[str]) -> bool:
-    if len(args) != 5:
+    if len(args) != 6:
         print("Número de argumentos fornecidos é inválido")
         return False
 
@@ -153,6 +154,7 @@ def validate_args(args: list[str]) -> bool:
     if args[0] not in ['SIA', 'SIH', 'BOTH']:
         print("sistema inválido:", args[0])
         return False
+
 
     #essa condição não impede a execução
     if len(args[4]) != 7:
@@ -171,6 +173,10 @@ def validate_args(args: list[str]) -> bool:
 
     if data_fim < data_inicio:
         print("Data de início maior que data de fim")
+        return False
+    
+    if args[5] not in ['IVR', 'TUNEP', 'Ambos']:
+        print("sistema inválido:", args[5])
         return False
 
     return True
@@ -201,10 +207,10 @@ def find_files_of_interest(estado: str, data_inicio: Tdata, data_fim: Tdata, sih
     ftp_client.quit()
     return files
 
-def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_sih: str, cnes: str, subdirectory_name: str):
+def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_sih: str, cnes: str, subdirectory_name: str, tipo_valor: str):
     if (sia_sih == 'BOTH'):  # caso especial no qual os dois sistemas são selecionados
-        get_and_process_data(estado, data_inicio, data_fim, 'SIA', cnes, subdirectory_name)
-        get_and_process_data(estado, data_inicio, data_fim, 'SIH', cnes, subdirectory_name)
+        get_and_process_data(estado, data_inicio, data_fim, 'SIA', cnes, subdirectory_name, tipo_valor)
+        get_and_process_data(estado, data_inicio, data_fim, 'SIH', cnes, subdirectory_name, tipo_valor)
         return
 
     print(f"processando {sia_sih}:")
@@ -214,8 +220,8 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
 
 
     with Pool(10) as p:
-        print([[file, cnes, sia_sih, subdirectory_name] for file in files_of_interest])
-        p.map(dowload_e_processamento, [[file, cnes, sia_sih, subdirectory_name] for file in files_of_interest])
+        print([[file, cnes, sia_sih, subdirectory_name, tipo_valor] for file in files_of_interest])
+        p.map(dowload_e_processamento, [[file, cnes, sia_sih, subdirectory_name, tipo_valor] for file in files_of_interest])
 
 
 def unite_files(subdirectory_name: str):
@@ -303,6 +309,7 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     cnes = file_and_cnes[1]
     sih_sia = file_and_cnes[2]
     subdirectory_name = file_and_cnes[3]
+    tipo_valor = file_and_cnes[4]
     fileName = os.path.split(file)[1]
 
     try:
@@ -330,9 +337,9 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     print("Processando dados do csv por cnes...")
 
     if (sih_sia == 'SIA'):
-        processar_dados_sia.processar_dados_csv(csv_path, final_csv_path, start_time, Tdata.current_data())
+        processar_dados_sia.processar_dados_csv(csv_path, final_csv_path, start_time, Tdata.current_data(), tipo_valor)
     else:
-        processar_dados_sih.processar_dados_csv(csv_path, final_csv_path, start_time, Tdata.current_data())
+        processar_dados_sih.processar_dados_csv(csv_path, final_csv_path, start_time, Tdata.current_data(), tipo_valor)
 
     print(f"removendo ../{subdirectory_name}/downloads/{fileName}")
     os.remove(download_path)
