@@ -39,16 +39,17 @@ def combinar_csvs(diretorio: str, saidapa: str, saidasp: str):
 
 def amostra_pa(arquivo: str, saida: str):
     df = pd.read_csv(arquivo, sep=',', header=None, dtype=str)
-    
+
     df[14] = df[14].astype(str)
-    
+
     grupo_col = 14
     amostra = df.groupby(grupo_col, group_keys=False).apply(lambda x: x.sample(n=min(len(x), 5), random_state=42), include_groups=True).reset_index(drop=True)
 
     amostra = amostra.reset_index(drop=True)
-    
+
     amostra.to_csv(saida, index=False, header=False, sep=",")
-    
+
+
 def amostra_sp(arquivo: str, saida: str):
     df = pd.read_csv(arquivo, sep=',', header=None, dtype=str)
 
@@ -61,10 +62,9 @@ def amostra_sp(arquivo: str, saida: str):
 
     print(amostra)
     amostra.to_csv(saida, index=False, header=False, sep=",")
-    
-    
+
+
 def main(csv_file_path: str, path_laudos: str):
     combinar_csvs(f"{csv_file_path}/", f"{path_laudos}/arquivos_pa_reunidos.csv", f"{path_laudos}/arquivos_sp_reunidos.csv")
     amostra_pa(f"{path_laudos}/arquivos_pa_reunidos.csv", f"{path_laudos}/amostra_pa.csv")
     amostra_sp(f"{path_laudos}/arquivos_sp_reunidos.csv", f"{path_laudos}/amostra_sp.csv")
-    
