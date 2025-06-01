@@ -6,7 +6,7 @@ function individualizadaHeader(): string {
     '\\begin{longtable}{|C{6.0cm}|C{26.4cm}|C{3.6cm}|C{4.8cm}|C{4.8cm}|C{6.0cm}|C{6.0cm}|C{6.0cm}|C{6.0cm}|C{4.8cm}|}\n';
   latexTable += '\\hline\n';
   latexTable +=
-    '\\textbf{Cód. Procedimento} & \\textbf{Desc. Procedimento} &\\textbf{Mês/Ano} & \\textbf{Valor Base} & \\textbf{Qtd. Base} & \\textbf{IVR (R\\$)} & \\textbf{TUNEP (R\\$)} &\\textbf{Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} & \\textbf{Base SUS}\n';
+    '\\textbf{Cód. Procedimento} & \\textbf{Desc. Procedimento} &\\textbf{Mês/Ano} & \\textbf{Valor Base} & \\textbf{Qtd. Base} & \\textbf{IVR (R\\$)} & \\textbf{TUNEP (R\\$)} &\\textbf{Correção Monetária e Juros (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} & \\textbf{Base SUS}\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
   return latexTable;

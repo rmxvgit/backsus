@@ -228,7 +228,7 @@ export class LaudoService {
 
     const [texContent, valorFinal] = getFinalDocument({
       razaoSocial: hospital.name,
-      nomeFantasia: hospital.name,
+      nomeFantasia: laudo.nome_fantasia,
       cnpj: laudo.cnpj,
       cnes: hospital.cnes.toString(),
       cidade: laudo.cidade,

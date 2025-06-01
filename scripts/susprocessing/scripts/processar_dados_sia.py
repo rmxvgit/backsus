@@ -166,7 +166,7 @@ def formatar_colunas(df: pd.DataFrame) -> pd.DataFrame:
     df['PA_CMP'] = df['PA_CMP'].astype(str).str[4:] + '/' + df['PA_CMP'].astype(str).str[:4]
     
     df = df[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'PA_CMP', 'PA_VALPRO', 'PA_QTDAPR', 'IVR', 'TUNEP', 'correcao', 'Total', 'Base SUS']].rename(
-        columns = {'CO_PROCEDIMENTO': 'Procedimentos', 'NO_PROCEDIMENTO': 'Desc. Procedimento', 'PA_CMP': 'Mês/Ano', 'PA_VALPRO': 'Valor Base (unitário) (R$)', 'PA_QTDAPR': 'Qtd. Base', 'IVR': 'IVR (R$)', 'TUNEP': 'TUNEP (R$)', 'correcao' :'Correção'})
+        columns = {'CO_PROCEDIMENTO': 'Procedimentos', 'NO_PROCEDIMENTO': 'Desc. Procedimento', 'PA_CMP': 'Mês/Ano', 'PA_VALPRO': 'Valor Base (R$)', 'PA_QTDAPR': 'Qtd. Base', 'IVR': 'IVR (R$)', 'TUNEP': 'TUNEP (R$)', 'correcao' :'Correção'})
     
     return df
 

@@ -59,26 +59,19 @@ export function getDocumentHeaderString(params: HeaderStrParams): string {
 
     \\LARGE
     \\textbf{1) POLO ATIVO}
-
-    \\begin{tabular}{l l}
-    \\hline
-    \\textbf{Razão Social:} & ${params.razaoSocial} \\\\
-    \\hline
-    \\textbf{Nome Fantasia:} & ${params.nomeFantasia} \\\\
-    \\hline
-    \\textbf{Código CNES:} & ${params.cnes} \\\\
-    \\hline
-    \\textbf{Documento:} & ${params.cnpj} (CNPJ) \\\\
-    \\hline
-    \\textbf{Cidade:} & ${params.cidade} \\\\
-    \\hline
-    \\textbf{UF:} & ${params.estado} \\\\
-    \\hline
-    \\textbf{Número Processo:} & ${params.numeroProcesso} \\\\
-    \\hline
-    \\textbf{Data de Distribuição:} & ${params.dataDistribuicao} \\\\
-    \\hline
-    \\end{tabular}
+    
+    \\begin{quote}
+    \\begin{description}
+    \\item{Razão Social:} & ${params.razaoSocial} \\
+    \\item{Nome Fantasia:} & ${params.nomeFantasia} \\
+    \\item{Código CNES:} & ${params.cnes} \\
+    \\item{Documento:} & ${params.cnpj} (CNPJ) \\
+    \\item{Cidade:} & ${params.cidade} \\
+    \\item{UF:} & ${params.estado} \\
+    \\item{Número Processo:} & ${params.numeroProcesso} \\
+    \\item{Data de Distribuição:} & ${params.dataDistribuicao} \\
+    \\end{description}
+    \\end{quote}
 
     \\vspace{10mm}
 
