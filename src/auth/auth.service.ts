@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { LoginDTO } from './dto/auth.dto';
-import { PrismaClient } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
+import { PrismaClient } from '@prisma/client';
+import { LoginDTO } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -19,5 +19,14 @@ export class AuthService {
       return this.jwtService.sign({ email: user.email });
     }
     return null;
+  }
+  async findAllUsers() {
+    return this.prisma.user.findMany();
+  }
+
+  async deleteUserByEmail(email: string) {
+    return this.prisma.user.delete({
+      where: { email },
+    });
   }
 }

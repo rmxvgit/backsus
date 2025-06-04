@@ -1,10 +1,10 @@
 function resumoTotalHeader(): string {
   let latexTable = '';
   latexTable += '\\Huge';
-  latexTable += '\\begin{longtable}{|C{12cm}|C{12cm}|C{12cm}|}\n';
+  latexTable += '\\begin{longtable}{|C{15cm}|C{15cm}|C{15cm}|}\n';
   latexTable += '\\hline\n';
   latexTable +=
-    '\\textbf{IVR/Tunep (R\\$)} & \\textbf{ Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} \n';
+    '\\textbf{IVR/Tunep (R\\$)} & \\textbf{ Correção Monetária e Juros (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} \n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
   return latexTable;

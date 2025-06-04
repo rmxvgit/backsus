@@ -5,7 +5,7 @@ function resumoMesHeader(): string {
   latexTable += '\\begin{longtable}{|C{11cm}|C{11cm}|C{11cm}|C{11cm}|}\n';
   latexTable += '\\hline\n';
   latexTable +=
-    '\\textbf{Mês/Ano} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{ Correção Monetária (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} \\\\\n';
+    '\\textbf{Mês/Ano} & \\textbf{IVR/Tunep (R\\$)} & \\textbf{ Correção Monetária e Juros (R\\$)} & \\textbf{Total IVR/Tunep (R\\$)} \\\\\n';
   latexTable += '\\endhead\n';
   latexTable += '\\hline\n';
   return latexTable;
