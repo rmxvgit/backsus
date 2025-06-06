@@ -10,7 +10,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --user -r requirements.txt
 
-# Stage 2: Build Node.js environment with NestJS
+# Stage 2: Build Node.js environment with NestJS and Prisma
 FROM node:18-bullseye as builder
 
 # Install LuaLaTeX and dependencies
@@ -29,9 +29,12 @@ WORKDIR /app
 COPY package*.json ./
 COPY nest-cli.json .
 COPY tsconfig*.json ./
+COPY prisma/schema.prisma ./prisma/
 
 RUN npm install -g @nestjs/cli && npm install
-RUN npx prisma migrate
+
+# Generate Prisma client
+RUN npx prisma generate
 
 # Copy all files and build the project
 COPY . .
@@ -55,6 +58,7 @@ RUN apt-get update && \
     python3 \
     libpython3.9 \
     fonts-lmodern \
+    openssl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -63,6 +67,7 @@ WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/prisma ./prisma
 
 # Environment variables
 ENV NODE_ENV production
