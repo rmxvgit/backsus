@@ -23,9 +23,6 @@ export interface finalDocParams {
 }
 
 export function getFinalDocument(params: finalDocParams): string[] {
-  //LISTAR O DIRETÓRIO DOS SCRIPTS EM PYTHON
-  listScriptsDir();
-
   function pathToData(finalPath: string): string {
     const csvPath = join(
       process.cwd(),

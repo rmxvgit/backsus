@@ -139,8 +139,10 @@ export class LaudoService {
       return;
     }
 
-    console.log(stdout);
     console.log('O SCRIPT EM PYTHON FUNCIONOU');
+
+    //LISTAR O DIRETÓRIO DOS SCRIPTS EM PYTHON
+    listScriptsDir();
 
     let pdf_generation_result: string;
     // tenta gerar o pdf
