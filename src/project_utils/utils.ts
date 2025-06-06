@@ -31,3 +31,7 @@ export function listScriptsDir() {
   const path = join(cwd(), 'scripts/susprocess/scripts');
   readdirSync(path);
 }
+
+export function readCwd() {
+  readdirSync(cwd());
+}
