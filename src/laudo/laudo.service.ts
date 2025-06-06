@@ -139,6 +139,7 @@ export class LaudoService {
       return;
     }
 
+    console.log(stdout);
     console.log('O SCRIPT EM PYTHON FUNCIONOU');
 
     let pdf_generation_result: string;

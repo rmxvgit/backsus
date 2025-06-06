@@ -136,14 +136,14 @@ def verify_dependencies():
 def create_subdirectory(cnes: str, estado: str):
     subdirectory_name = f'H{cnes}{estado}'
     subdirectory_path = get_path()
-    os.listdir(subdirectory_path)
+    print("diretório antes da criação\n", os.listdir(subdirectory_path))
     os.makedirs(subdirectory_path, exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'downloads'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'dbfs'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'csvs'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'finalcsvs'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'laudos'), exist_ok=True)
-    os.listdir(subdirectory_path)
+    print("diretório depois da criação\n", os.listdir(subdirectory_path))
     return subdirectory_name
 
 def validate_args(args: list[str]) -> bool:
