@@ -28,7 +28,7 @@ export class ProjUtils {
 }
 
 export function listScriptsDir() {
-  const path = join(cwd(), 'scripts/susprocess/scripts');
+  const path = join(cwd(), 'scripts/susprocessing');
   readdirSync(path);
 }
 
