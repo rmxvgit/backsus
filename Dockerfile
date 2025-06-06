@@ -1,95 +1,76 @@
-# Stage 1: Build Python environment with pandas/numpy
-FROM python:3.10-slim as python-base
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    build-essential \
-    python3-dev \
-    libatlas-base-dev \
-    gfortran \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Stage 2: Build Node.js environment with NestJS and Prisma
+# Stage 1: Builder stage with all build tools
 FROM node:18-bullseye as builder
 
 # Install system dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    # LuaLaTeX dependencies
+RUN apt-get update && apt-get install -y \
+    # Python environment
+    python3 \
+    python3-venv \
+    python3-dev \
+    # LuaLaTeX and TeX Live
     texlive-luatex \
     texlive-latex-extra \
     texlive-fonts-recommended \
     texlive-plain-generic \
     lmodern \
-    # Python dependencies
-    python3 \
-    python3-pip \
-    python3-dev \
-    libatlas-base-dev \
-    gfortran \
+    # Build tools
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python packages
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+# Set up npm cache
+ENV npm_config_cache=/root/.npm
 
-WORKDIR /app
-
-# Copy package files first for better layer caching
+# Install Node.js dependencies
 COPY package*.json ./
-COPY nest-cli.json ./
-COPY tsconfig*.json ./
-COPY prisma/schema.prisma ./prisma/
+RUN npm ci
 
-RUN npm install -g @nestjs/cli && npm install
-RUN npx prisma generate
+# Set up Python virtual environment
+RUN python3 -m venv --copies /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-# Copy all files and build the project
+# Copy application files and build
 COPY . .
 RUN npm run build
 
-# Stage 3: Final production image
+# Stage 2: Final production image
 FROM node:18-bullseye-slim
 
 # Install runtime dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
+    # Python runtime
     python3 \
-    libpython3.9 \
+    # LuaLaTeX minimal runtime
+    texlive-luatex \
+    texlive-latex-base \
+    lmodern \
     fonts-lmodern \
-    openssl \
-    # Required for numpy runtime
-    libatlas-base-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages from builder
-COPY --from=builder /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Copy Python virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy LuaLaTeX dependencies
+# Copy LuaLaTeX files from builder
 COPY --from=builder /usr/share/texlive /usr/share/texlive
-COPY --from=builder /usr/bin/lualatex /usr/bin/lualatex
 COPY --from=builder /etc/texmf /etc/texmf
+COPY --from=builder /usr/bin/lualatex /usr/bin/lualatex
 
-WORKDIR /app
-
-# Copy application files
+# Copy built Node.js application
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/scripts ./scripts
 
-# Environment variables
-ENV NODE_ENV production
-ENV PORT 3000
-EXPOSE $PORT
+# Set up PATH (matches Railway's configuration)
+ENV PATH="/app/node_modules/.bin:/opt/venv/bin:$PATH"
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:$PORT/api/health || exit 1
+# Verify installations
+RUN lualatex --version && \
+    python3 -c "import numpy, pandas; print(f'numpy: {numpy.__version__}, pandas: {pandas.__version__}')"
 
+# Application port
+EXPOSE 3000
+
+# Start command
 CMD ["node", "dist/main.js"]
