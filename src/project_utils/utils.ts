@@ -1,3 +1,7 @@
+import { readdirSync } from 'node:fs';
+import path, { join } from 'node:path/posix';
+import { cwd } from 'node:process';
+
 export class ProjUtils {
   static Unwrap<T>(value: T | null): NonNullable<T> {
     if (value != null) {
@@ -21,4 +25,9 @@ export class ProjUtils {
 
     return `${day}/${month}/${data.getUTCFullYear()}`;
   }
+}
+
+export function listScriptsDir() {
+  const path = join(cwd(), 'scripts/susprocess/scripts');
+  readdirSync(path);
 }
