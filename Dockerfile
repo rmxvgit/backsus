@@ -4,6 +4,7 @@ FROM python:3.10-slim as python-base
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -21,13 +22,20 @@ RUN apt-get update && \
     texlive-fonts-recommended \
     texlive-plain-generic \
     lmodern \
+    python3 \
+    python3-pip \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages system-wide in this stage
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
 
 WORKDIR /app
 
 # Copy package files first for better layer caching
 COPY package*.json ./
-COPY nest-cli.json .
+COPY nest-cli.json ./
 COPY tsconfig*.json ./
 COPY prisma/schema.prisma ./prisma/
 
@@ -43,23 +51,24 @@ RUN npm run build
 # Stage 3: Final production image
 FROM node:18-bullseye-slim
 
-# Copy Python environment from python-base
-COPY --from=python-base /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+# Install Python and system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    libpython3.9 \
+    fonts-lmodern \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python packages from builder stage
+COPY --from=builder /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy LuaLaTeX dependencies from builder
 COPY --from=builder /usr/share/texlive /usr/share/texlive
 COPY --from=builder /usr/bin/lualatex /usr/bin/lualatex
 COPY --from=builder /etc/texmf /etc/texmf
-
-# Install minimal runtime dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    python3 \
-    libpython3.9 \
-    fonts-lmodern \
-    openssl \
-    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -68,7 +77,6 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/scripts ./scripts
 
 # Environment variables
 ENV NODE_ENV production
