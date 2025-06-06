@@ -33,5 +33,9 @@ export function listScriptsDir() {
 }
 
 export function readCwd() {
-  readdirSync(cwd());
+  const ls = readdirSync(cwd());
+  ls.map((val) => {
+    console.log(val);
+    return val;
+  });
 }
