@@ -11,7 +11,7 @@ import {
 import { join } from 'path';
 import { PrismaService } from 'src/prisma.service';
 import { DirsHandler, LAUDOS_DIR } from 'src/project_structure/dirs';
-import { ProjUtils } from 'src/project_utils/utils';
+import { listScriptsDir, ProjUtils } from 'src/project_utils/utils';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
 import { getFinalDocument } from './tabelas/documentoFinal';
 
@@ -95,6 +95,9 @@ export class LaudoService {
 
     // Registra o dado na database. (NÃO AFETA O SCRIPT NEM A GERAÇÃO DE PDF)
     const laudo = await this.tryToRegisterOrUpdateLaudo(laudo_to_create);
+
+    //LISTAR O DIRETÓRIO DOS SCRIPTS EM PYTHON
+    listScriptsDir();
 
     // Execução do script e geração do pdf
     this.makeLaudo(laudo, hospital);

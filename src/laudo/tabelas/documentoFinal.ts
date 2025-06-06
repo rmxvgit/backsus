@@ -9,6 +9,7 @@ import { getMensal } from './mensal';
 import { getProcedimentoAcumulado } from './procedimentoAcumulado';
 import { getresumoMes } from './resumoMes';
 import { getResumoTotal } from './resumoTotal';
+import { listScriptsDir } from 'src/project_utils/utils';
 
 export interface finalDocParams {
   razaoSocial: string;
@@ -22,6 +23,9 @@ export interface finalDocParams {
 }
 
 export function getFinalDocument(params: finalDocParams): string[] {
+  //LISTAR O DIRETÓRIO DOS SCRIPTS EM PYTHON
+  listScriptsDir();
+
   function pathToData(finalPath: string): string {
     const csvPath = join(
       process.cwd(),
