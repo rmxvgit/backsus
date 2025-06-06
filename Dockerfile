@@ -1,76 +1,96 @@
-# Stage 1: Builder stage with all build tools
-FROM node:18-bullseye as builder
+# Build stage
+FROM node:20-alpine AS builder
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    # Python environment
-    python3 \
-    python3-venv \
-    python3-dev \
-    # LuaLaTeX and TeX Live
-    texlive-luatex \
-    texlive-latex-extra \
-    texlive-fonts-recommended \
-    texlive-plain-generic \
-    lmodern \
-    # Build tools
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-# Set up npm cache
-ENV npm_config_cache=/root/.npm
+# Install Python and build dependencies
+RUN apk add --no-cache python3 py3-pip build-base python3-dev
 
-# Install Node.js dependencies
+# Install LuaLaTeX and dependencies
+RUN apk add --no-cache \
+    texlive-full \
+    texmf-dist-langportuguese \
+    texmf-dist-latexextra \
+    texmf-dist-pictures \
+    texmf-dist-science \
+    texmf-dist-bibtexextra \
+    texmf-dist-pstricks \
+    texmf-dist-music \
+    texmf-dist-fontsextra \
+    texmf-dist-fontsrecommended \
+    texmf-dist-plainextra \
+    texmf-dist-publishers \
+    texmf-dist-latexrecommended \
+    texmf-dist-mathextra \
+    texmf-dist-fontutils \
+    texmf-dist-luatex \
+    texmf-dist-metapost \
+    texmf-dist-xetex
+
+# Install Python packages
+RUN pip3 install numpy pandas
+
+# Copy package files
 COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install dependencies
 RUN npm ci
 
-# Set up Python virtual environment
-RUN python3 -m venv --copies /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-# Copy application files and build
+# Copy source code
 COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build the application
 RUN npm run build
 
-# Stage 2: Final production image
-FROM node:18-bullseye-slim
+# Production stage
+FROM node:20-alpine
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    # Python runtime
-    python3 \
-    # LuaLaTeX minimal runtime
-    texlive-luatex \
-    texlive-latex-base \
-    lmodern \
-    fonts-lmodern \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-# Copy Python virtual environment from builder
-COPY --from=builder /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Install Python and runtime dependencies
+RUN apk add --no-cache python3 py3-pip
 
-# Copy LuaLaTeX files from builder
-COPY --from=builder /usr/share/texlive /usr/share/texlive
-COPY --from=builder /etc/texmf /etc/texmf
-COPY --from=builder /usr/bin/lualatex /usr/bin/lualatex
+# Install LuaLaTeX and dependencies
+RUN apk add --no-cache \
+    texlive-full \
+    texmf-dist-langportuguese \
+    texmf-dist-latexextra \
+    texmf-dist-pictures \
+    texmf-dist-science \
+    texmf-dist-bibtexextra \
+    texmf-dist-pstricks \
+    texmf-dist-music \
+    texmf-dist-fontsextra \
+    texmf-dist-fontsrecommended \
+    texmf-dist-plainextra \
+    texmf-dist-publishers \
+    texmf-dist-latexrecommended \
+    texmf-dist-mathextra \
+    texmf-dist-fontutils \
+    texmf-dist-luatex \
+    texmf-dist-metapost \
+    texmf-dist-xetex
 
-# Copy built Node.js application
-COPY --from=builder /app/node_modules ./node_modules
+# Install Python packages
+RUN pip3 install numpy pandas
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install production dependencies only
+RUN npm ci --only=production
+
+# Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-# Set up PATH (matches Railway's configuration)
-ENV PATH="/app/node_modules/.bin:/opt/venv/bin:$PATH"
+# Expose the port the app runs on
+EXPOSE 3001
 
-# Verify installations
-RUN lualatex --version && \
-    python3 -c "import numpy, pandas; print(f'numpy: {numpy.__version__}, pandas: {pandas.__version__}')"
-
-# Application port
-EXPOSE 3000
-
-# Start command
-CMD ["node", "dist/main.js"]
+# Start the application
+CMD ["npm", "run", "start:prod"]
