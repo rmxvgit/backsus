@@ -251,10 +251,11 @@ export class LaudoService {
     // Compila o .tex para .pdf
     try {
       execSync(
-        `texlua -interaction=nonstopmode -output-directory=${LAUDOS_DIR} ${texPath}`,
+        `lualatex -interaction=nonstopmode -output-directory=${LAUDOS_DIR} ${texPath}`,
         { cwd: LAUDOS_DIR, stdio: 'inherit' },
       );
-    } catch {
+    } catch (e: any) {
+      console.log(e);
       console.warn(
         'pdflatex pode ter retornado um warning, verificando se PDF foi gerado...',
       );
