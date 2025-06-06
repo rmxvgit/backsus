@@ -1,0 +1,2 @@
+providers = ["...", "python"]
+aptPkgs = ["...", "texlive-luatex"]
