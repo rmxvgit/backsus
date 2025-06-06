@@ -3,8 +3,11 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install Python and build dependencies
-RUN apk add --no-cache python3 py3-pip build-base python3-dev
+# Install Python and build dependencies in smaller chunks
+RUN apk add --no-cache python3 && \
+    apk add --no-cache py3-pip && \
+    apk add --no-cache build-base && \
+    apk add --no-cache python3-dev
 
 # Install LuaLaTeX and dependencies
 RUN apk add --no-cache \
@@ -28,7 +31,7 @@ RUN apk add --no-cache \
     texmf-dist-xetex
 
 # Install Python packages
-RUN pip3 install numpy pandas
+RUN pip3 install --no-cache-dir numpy pandas
 
 # Copy package files
 COPY package*.json ./
@@ -51,8 +54,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install Python and runtime dependencies
-RUN apk add --no-cache python3 py3-pip
+# Install Python and runtime dependencies in smaller chunks
+RUN apk add --no-cache python3 && \
+    apk add --no-cache py3-pip
 
 # Install LuaLaTeX and dependencies
 RUN apk add --no-cache \
@@ -76,7 +80,7 @@ RUN apk add --no-cache \
     texmf-dist-xetex
 
 # Install Python packages
-RUN pip3 install numpy pandas
+RUN pip3 install --no-cache-dir numpy pandas
 
 # Copy package files
 COPY package*.json ./
