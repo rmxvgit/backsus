@@ -4,7 +4,6 @@ import { exec, ExecException, execSync } from 'child_process';
 import {
   createReadStream,
   existsSync,
-  readdirSync,
   ReadStream,
   unlinkSync,
   writeFileSync,
@@ -12,10 +11,9 @@ import {
 import { join } from 'path';
 import { PrismaService } from 'src/prisma.service';
 import { DirsHandler, LAUDOS_DIR } from 'src/project_structure/dirs';
-import { listScriptsDir, ProjUtils, readCwd } from 'src/project_utils/utils';
+import { listScriptsDir, ProjUtils } from 'src/project_utils/utils';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
 import { getFinalDocument } from './tabelas/documentoFinal';
-import path from 'path/posix';
 
 export interface LaudoInfo {
   id: number;
@@ -99,7 +97,6 @@ export class LaudoService {
     const laudo = await this.tryToRegisterOrUpdateLaudo(laudo_to_create);
 
     //LISTAR O DIRETÓRIO DOS SCRIPTS EM PYTHON
-    readCwd();
     listScriptsDir();
 
     // Execução do script e geração do pdf

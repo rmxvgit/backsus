@@ -53,6 +53,7 @@ def main():
         tipo_valor = args[5]
 
         subdirectory_name = create_subdirectory(cnes, estado)
+
         if not sigtap(Tdata.data_atual_aaaamm()):
             print("AVISO: Não foi possível carregar arquivos SIGTAP")
         get_and_process_data(estado, data_inicio, data_fim, sistema, cnes, subdirectory_name, tipo_valor)
@@ -134,15 +135,15 @@ def verify_dependencies():
 
 def create_subdirectory(cnes: str, estado: str):
     subdirectory_name = f'H{cnes}{estado}'
-    subdirectory_path = get_path(subdirectory_name)
-
+    subdirectory_path = get_path()
+    os.listdir(subdirectory_path)
     os.makedirs(subdirectory_path, exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'downloads'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'dbfs'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'csvs'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'finalcsvs'), exist_ok=True)
     os.makedirs(get_path(subdirectory_name, 'laudos'), exist_ok=True)
-
+    os.listdir(subdirectory_path)
     return subdirectory_name
 
 def validate_args(args: list[str]) -> bool:
@@ -174,7 +175,7 @@ def validate_args(args: list[str]) -> bool:
     if data_fim < data_inicio:
         print("Data de início maior que data de fim")
         return False
-    
+
     if args[5] not in ['IVR', 'TUNEP', 'Ambos']:
         print("sistema inválido:", args[5])
         return False
