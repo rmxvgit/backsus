@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --user -r requirements.txt
 
 # Stage 2: Build Node.js environment with NestJS
-FROM node:18-bullseye as node-base
+FROM node:18-bullseye as builder
 
 # Install LuaLaTeX and dependencies
 RUN apt-get update && \
@@ -32,6 +32,10 @@ COPY tsconfig*.json ./
 
 RUN npm install -g @nestjs/cli && npm install
 
+# Copy all files and build the project
+COPY . .
+RUN npm run build
+
 # Stage 3: Final production image
 FROM node:18-bullseye-slim
 
@@ -39,10 +43,10 @@ FROM node:18-bullseye-slim
 COPY --from=python-base /root/.local /root/.local
 ENV PATH=/root/.local/bin:$PATH
 
-# Copy LuaLaTeX dependencies from node-base
-COPY --from=node-base /usr/share/texlive /usr/share/texlive
-COPY --from=node-base /usr/bin/lualatex /usr/bin/lualatex
-COPY --from=node-base /etc/texmf /etc/texmf
+# Copy LuaLaTeX dependencies from builder
+COPY --from=builder /usr/share/texlive /usr/share/texlive
+COPY --from=builder /usr/bin/lualatex /usr/bin/lualatex
+COPY --from=builder /etc/texmf /etc/texmf
 
 # Install minimal runtime dependencies
 RUN apt-get update && \
@@ -54,9 +58,10 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Copy built Node.js application
-COPY --from=node-base /app/node_modules ./node_modules
-COPY . .
+# Copy built application from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
 
 # Environment variables
 ENV NODE_ENV production
@@ -68,4 +73,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:$PORT/api/health || exit 1
 
 # Start command
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/main.js"]
