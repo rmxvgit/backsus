@@ -1,4 +1,4 @@
 providers = ["...", "python"]
 
 [phases.setup]
-aptPkgs = ["...", "texlive-luatex"]
+aptPkgs = ["...", "texlive-xetex"]
