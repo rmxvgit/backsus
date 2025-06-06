@@ -31,6 +31,7 @@ COPY nest-cli.json .
 COPY tsconfig*.json ./
 
 RUN npm install -g @nestjs/cli && npm install
+RUN npx prisma migrate
 
 # Copy all files and build the project
 COPY . .
