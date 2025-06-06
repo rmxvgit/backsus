@@ -1,5 +1,5 @@
 import { readdirSync } from 'node:fs';
-import path, { join } from 'node:path/posix';
+import { join } from 'node:path/posix';
 import { cwd } from 'node:process';
 
 export class ProjUtils {
@@ -29,7 +29,12 @@ export class ProjUtils {
 
 export function listScriptsDir() {
   const path = join(cwd(), 'scripts/susprocessing');
-  readdirSync(path);
+  const ls = readdirSync(path);
+
+  ls.map((val) => {
+    console.log(val);
+    return val;
+  });
 }
 
 export function readCwd() {
