@@ -257,7 +257,7 @@ export class LaudoService {
     } catch (e: any) {
       console.log(e);
       console.warn(
-        'pdflatex pode ter retornado um warning, verificando se PDF foi gerado...',
+        'xelatex pode ter retornado um warning, verificando se PDF foi gerado...',
       );
     }
 

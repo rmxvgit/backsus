@@ -14,26 +14,29 @@ import { Response } from 'express';
 import { LoggedGuard } from 'src/auth/guard';
 
 @Controller('laudo')
-@UseGuards(LoggedGuard)
 export class LaudoController {
   constructor(private readonly laudoService: LaudoService) {}
 
   @Post('make')
+  @UseGuards(LoggedGuard)
   create(@Body() createLaudoDto: CreateLaudoDto) {
     return this.laudoService.handleMakeRequest(createLaudoDto);
   }
 
   @Get()
+  @UseGuards(LoggedGuard)
   async findAll() {
     return await this.laudoService.findAll();
   }
 
   @Get('hospital:cnes')
+  @UseGuards(LoggedGuard)
   findByCnes(@Param('cnes') cnes: string) {
     return this.laudoService.findByCnes(+cnes);
   }
 
   @Get('id:id')
+  @UseGuards(LoggedGuard)
   async findById(@Param('id') id: string) {
     return await this.laudoService.findById(+id);
   }
@@ -50,6 +53,7 @@ export class LaudoController {
   }
 
   @Delete(':id')
+  @UseGuards(LoggedGuard)
   remove(@Param('id') id: string) {
     return this.laudoService.remove(+id);
   }
