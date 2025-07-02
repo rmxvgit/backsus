@@ -9,7 +9,6 @@ import { getMensal } from './mensal';
 import { getProcedimentoAcumulado } from './procedimentoAcumulado';
 import { getresumoMes } from './resumoMes';
 import { getResumoTotal } from './resumoTotal';
-import { listScriptsDir } from 'src/project_utils/utils';
 
 export interface finalDocParams {
   razaoSocial: string;
