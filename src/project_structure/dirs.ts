@@ -3,6 +3,7 @@ import { join } from 'path';
 import { constants } from 'fs';
 
 export const LAUDOS_DIR: string = join(process.cwd(), 'laudos');
+export const SCRIPTS_DIR: string = join(process.cwd(), 'scripts/susprocessing');
 
 export class DirsHandler {
   static CreateLaudosDirIfNecessary() {
