@@ -5,12 +5,17 @@ import {
   createReadStream,
   existsSync,
   ReadStream,
+  rmSync,
   unlinkSync,
   writeFileSync,
 } from 'fs';
 import { join } from 'path';
 import { PrismaService } from 'src/prisma.service';
-import { DirsHandler, LAUDOS_DIR } from 'src/project_structure/dirs';
+import {
+  DirsHandler,
+  LAUDOS_DIR,
+  SCRIPTS_DIR,
+} from 'src/project_structure/dirs';
 import { listScriptsDir, ProjUtils } from 'src/project_utils/utils';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
 import { getFinalDocument } from './tabelas/documentoFinal';
@@ -241,6 +246,7 @@ export class LaudoService {
       estado: hospital.estado,
       numeroProcesso: ProjUtils.Unwrap(laudo.numero_processo),
       dataDistribuicao: data,
+      file_name: laudo.file_name,
     });
 
     // Salva o arquivo .tex
@@ -273,6 +279,11 @@ export class LaudoService {
       if (existsSync(auxFile)) {
         unlinkSync(auxFile);
       }
+    });
+
+    rmSync(join(SCRIPTS_DIR, `H${hospital.cnes}${hospital.estado}`), {
+      recursive: true,
+      force: true,
     });
 
     console.log(`PDF gerado com sucesso em: ${pdfPath}`);
