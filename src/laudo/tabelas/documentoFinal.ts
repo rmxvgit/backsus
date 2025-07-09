@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs';
+import { copyFileSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { getresumoAnual } from './anual';
 import { getfilesPA } from './arquivosPA';
@@ -9,6 +9,7 @@ import { getMensal } from './mensal';
 import { getProcedimentoAcumulado } from './procedimentoAcumulado';
 import { getresumoMes } from './resumoMes';
 import { getResumoTotal } from './resumoTotal';
+import { LAUDOS_DIR } from 'src/project_structure/dirs';
 
 export interface finalDocParams {
   razaoSocial: string;
@@ -19,6 +20,7 @@ export interface finalDocParams {
   estado: string;
   numeroProcesso: string;
   dataDistribuicao: string;
+  file_name: string;
 }
 
 export function getFinalDocument(params: finalDocParams): string[] {
@@ -41,6 +43,18 @@ export function getFinalDocument(params: finalDocParams): string[] {
   // Ler o arquivo CSV
   const csv_arquivossp = readFileSync(pathToData('amostra_sp.csv'), 'utf-8');
   const csv_arquivospa = readFileSync(pathToData('amostra_pa.csv'), 'utf-8');
+
+  // mover as amostras para a pasta de laudos
+  copyFileSync(
+    pathToData('amostra_sp.csv'),
+    join(LAUDOS_DIR, `PA${params.cnes}${params.file_name}.csv`),
+  );
+
+  // mover as amostras para a pasta de laudos
+  copyFileSync(
+    pathToData('amostra_pa.csv'),
+    join(LAUDOS_DIR, `SP${params.cnes}${params.file_name}.csv`),
+  );
 
   const csv_individualizada = readFileSync(
     pathToData('calculo_IVR_TUNEP_individualizado.csv'),
