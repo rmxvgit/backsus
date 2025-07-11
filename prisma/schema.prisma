@@ -44,6 +44,7 @@ model Laudo {
 }
 
 model User {
-  email String @unique
+  email String  @unique
   senha String
+  admin Boolean @default(false)
 }

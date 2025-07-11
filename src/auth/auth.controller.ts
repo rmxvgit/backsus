@@ -6,9 +6,11 @@ import {
   HttpException,
   Param,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/auth.dto';
+import { AdminGuard } from './guard';
 
 @Controller('auth')
 export class AuthController {
@@ -23,8 +25,16 @@ export class AuthController {
   }
 
   @Get('usuarios')
+  @UseGuards(AdminGuard)
   async getAllUsers() {
     return this.authService.findAllUsers();
+  }
+
+  @Post('usuarios')
+  async createUser(
+    @Body() user_data: { email: string; senha: string; admin: boolean },
+  ) {
+    return this.authService.createUser(user_data);
   }
 
   @Delete('usuarios/email/:email')

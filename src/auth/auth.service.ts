@@ -20,8 +20,15 @@ export class AuthService {
     }
     return null;
   }
+
   async findAllUsers() {
     return this.prisma.user.findMany();
+  }
+
+  async createUser(user_data: { email: string; senha: string }) {
+    return this.prisma.user.create({
+      data: user_data,
+    });
   }
 
   async deleteUserByEmail(email: string) {
