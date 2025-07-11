@@ -10,15 +10,20 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validate(login_data: LoginDTO) {
+  async validate(
+    login_data: LoginDTO,
+  ): Promise<{ user: string | null; admin: boolean }> {
     const user = await this.prisma.user.findUnique({
       where: { email: login_data.email, senha: login_data.senha },
     });
     console.log(user);
     if (user != null) {
-      return this.jwtService.sign({ email: user.email });
+      return {
+        user: this.jwtService.sign({ email: user.email }),
+        admin: user.admin,
+      };
     }
-    return null;
+    return { user: null, admin: false };
   }
 
   async findAllUsers() {
