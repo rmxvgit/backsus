@@ -41,15 +41,48 @@ export class LaudoController {
     return await this.laudoService.findById(+id);
   }
 
-  @Get('dowload:id')
-  async dowload(@Param('id') id: string, @Res() res: Response) {
-    const stream = await this.laudoService.download(+id);
+  @Get('download-csv-pa:id')
+  async dowload_CSV_PA(@Param('id') id: string, @Res() res: Response) {
+    const stream = await this.laudoService.download_CSV(+id, 'PA');
     res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment;filename=laudo.pdf',
+      'Content-Type': 'text/csv',
+      'Content-Disposition': 'attachment;filename=amostra_PA.csv',
     });
 
     stream.pipe(res);
+  }
+
+  @Get('download-csv-sp:id')
+  async dowload_CSV_SP(@Param('id') id: string, @Res() res: Response) {
+    console.log(id);
+    try {
+      const stream = await this.laudoService.download_CSV(+id, 'SP');
+      res.set({
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment;filename=amostra_SP.csv',
+      });
+
+      stream.pipe(res);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Erro ao baixar arquivo CSV');
+    }
+  }
+
+  @Get('dowload:id')
+  async dowload(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const stream = await this.laudoService.download(+id);
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment;filename=laudo.pdf',
+      });
+
+      stream.pipe(res);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Erro ao baixar arquivo PDF');
+    }
   }
 
   @Delete(':id')

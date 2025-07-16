@@ -6,9 +6,11 @@ import {
   HttpException,
   Param,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/auth.dto';
+import { AdminGuard } from './guard';
 
 @Controller('auth')
 export class AuthController {
@@ -17,14 +19,22 @@ export class AuthController {
   @Post('login')
   async login(@Body() login_data: LoginDTO) {
     console.log(login_data);
-    const user = await this.authService.validate(login_data);
-    if (!user) throw new HttpException('invalid credentials', 401);
-    return user;
+    const credentials = await this.authService.validate(login_data);
+    if (!credentials.user) throw new HttpException('invalid credentials', 401);
+    return credentials;
   }
 
   @Get('usuarios')
+  @UseGuards(AdminGuard)
   async getAllUsers() {
     return this.authService.findAllUsers();
+  }
+
+  @Post('usuarios')
+  async createUser(
+    @Body() user_data: { email: string; senha: string; admin: boolean },
+  ) {
+    return this.authService.createUser(user_data);
   }
 
   @Delete('usuarios/email/:email')

@@ -62,7 +62,29 @@ export class LaudoService {
 
     const pdf_path = join(LAUDOS_DIR, `${laudo.file_name}.pdf`);
 
+    if (!existsSync(pdf_path)) {
+      throw Error('arquivo não encontrado');
+    }
+
     return createReadStream(pdf_path);
+  }
+
+  async download_CSV(id: number, pa_sp: 'PA' | 'SP'): Promise<ReadStream> {
+    const laudo = ProjUtils.Unwrap(
+      await this.prisma.laudo.findUnique({ where: { id: id } }),
+    );
+
+    if (!laudo.ready) {
+      throw Error('laudo não está pronto ainda');
+    }
+
+    const path = join(LAUDOS_DIR, `${pa_sp}${laudo.file_name}.csv`);
+
+    if (!existsSync(path)) {
+      throw Error('arquivo não encontrado');
+    }
+
+    return createReadStream(path);
   }
 
   async handleMakeRequest(dto: CreateLaudoDto) {
@@ -292,13 +314,31 @@ export class LaudoService {
 
   async findAll() {
     const laudos = await this.prisma.laudo.findMany();
+    void this.fix_laudos(laudos);
     return laudos;
+  }
+
+  async fix_laudos(
+    laudos: { ready: boolean; file_name: string; id: number }[],
+  ) {
+    for (const laudo of laudos) {
+      console.log(laudo.file_name);
+      if (laudo.ready) {
+        const pdfPath = join(LAUDOS_DIR, `${laudo.file_name}.pdf`);
+        if (!existsSync(pdfPath)) {
+          await this.prisma.laudo.delete({
+            where: { id: laudo.id },
+          });
+        }
+      }
+    }
   }
 
   async findByCnes(cnes: number) {
     const laudos = await this.prisma.laudo.findMany({
       where: { cnes: cnes },
     });
+    void this.fix_laudos(laudos);
     return laudos;
   }
 
@@ -308,7 +348,11 @@ export class LaudoService {
   }
 
   async remove(id: number) {
-    return await this.prisma.laudo.delete({ where: { id: id } });
+    const laudo = await this.prisma.laudo.delete({ where: { id: id } });
+    unlinkSync(join(LAUDOS_DIR, `${laudo.file_name}.pdf`));
+    unlinkSync(join(LAUDOS_DIR, `${laudo.file_name}.tex`));
+    unlinkSync(join(LAUDOS_DIR, `PA${laudo.file_name}.csv`));
+    unlinkSync(join(LAUDOS_DIR, `SP${laudo.file_name}.csv`));
   }
 
   testGeneratePdf() {

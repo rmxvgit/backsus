@@ -47,13 +47,13 @@ export function getFinalDocument(params: finalDocParams): string[] {
   // mover as amostras para a pasta de laudos
   copyFileSync(
     pathToData('amostra_sp.csv'),
-    join(LAUDOS_DIR, `PA${params.cnes}${params.file_name}.csv`),
+    join(LAUDOS_DIR, `PA${params.file_name}.csv`),
   );
 
   // mover as amostras para a pasta de laudos
   copyFileSync(
     pathToData('amostra_pa.csv'),
-    join(LAUDOS_DIR, `SP${params.cnes}${params.file_name}.csv`),
+    join(LAUDOS_DIR, `SP${params.file_name}.csv`),
   );
 
   const csv_individualizada = readFileSync(
