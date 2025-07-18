@@ -27,7 +27,6 @@ export class AuthController {
 
   @Get('usuarios')
   @UseGuards(AdminGuard)
-  @UseGuards(AdminGuard)
   async getAllUsers() {
     return this.authService.findAllUsers();
   }
