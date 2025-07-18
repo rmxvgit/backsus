@@ -10,6 +10,13 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  async giveAdmin(admin: { admin: boolean }, email: string) {
+    return this.prisma.user.update({
+      where: { email: email },
+      data: { admin: admin.admin },
+    });
+  }
+
   async validate(
     login_data: LoginDTO,
   ): Promise<{ user: string | null; admin: boolean }> {
