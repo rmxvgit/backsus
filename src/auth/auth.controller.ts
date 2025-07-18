@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpException,
+  HttpStatus,
   Param,
   Post,
   UseGuards,
@@ -34,7 +35,16 @@ export class AuthController {
   async createUser(
     @Body() user_data: { email: string; senha: string; admin: boolean },
   ) {
+    if (!user_data.email || !user_data.senha) {
+      return HttpStatus.BAD_REQUEST;
+    }
+
     return this.authService.createUser(user_data);
+  }
+
+  @Post('giveadmin:email')
+  give_admin(@Body() admin: { admin: boolean }, @Param('email') email: string) {
+    return this.authService.giveAdmin(admin, email);
   }
 
   @Delete('usuarios/email/:email')
