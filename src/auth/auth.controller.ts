@@ -27,11 +27,13 @@ export class AuthController {
 
   @Get('usuarios')
   @UseGuards(AdminGuard)
+  @UseGuards(AdminGuard)
   async getAllUsers() {
     return this.authService.findAllUsers();
   }
 
   @Post('usuarios')
+  @UseGuards(AdminGuard)
   async createUser(
     @Body() user_data: { email: string; senha: string; admin: boolean },
   ) {
@@ -43,11 +45,13 @@ export class AuthController {
   }
 
   @Post('giveadmin:email')
+  @UseGuards(AdminGuard)
   give_admin(@Body() admin: { admin: boolean }, @Param('email') email: string) {
     return this.authService.giveAdmin(admin, email);
   }
 
   @Delete('usuarios/email/:email')
+  @UseGuards(AdminGuard)
   async deleteUserByEmail(@Param('email') email: string) {
     return this.authService.deleteUserByEmail(email);
   }
