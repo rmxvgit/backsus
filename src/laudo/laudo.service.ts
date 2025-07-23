@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { exec, ExecException, execSync } from 'child_process';
 import {
@@ -16,7 +16,7 @@ import {
   LAUDOS_DIR,
   SCRIPTS_DIR,
 } from 'src/project_structure/dirs';
-import { listScriptsDir, ProjUtils } from 'src/project_utils/utils';
+import { ProjUtils } from 'src/project_utils/utils';
 import { CreateLaudoDto } from './dto/create-laudo.dto';
 import { getFinalDocument } from './tabelas/documentoFinal';
 
@@ -91,6 +91,16 @@ export class LaudoService {
     console.log('Requisição de criação de laudo:');
     console.log(dto);
 
+    const todos_laudos = await this.prisma.laudo.findMany();
+    for (const laudo of todos_laudos) {
+      if (laudo.ready == false) {
+        throw new HttpException(
+          'aparentemente já existe um laudo sendo criado. Espere até a conclusão ou remova o laudo',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
     const cnes = parseInt(dto.cnes);
     const laudo_name = `laudo${dto.cnes}${dto.data_inicio}${dto.data_fim}`;
     const hospital: HospitalInfo = ProjUtils.Unwrap(
@@ -122,9 +132,6 @@ export class LaudoService {
 
     // Registra o dado na database. (NÃO AFETA O SCRIPT NEM A GERAÇÃO DE PDF)
     const laudo = await this.tryToRegisterOrUpdateLaudo(laudo_to_create);
-
-    //LISTAR O DIRETÓRIO DOS SCRIPTS EM PYTHON
-    listScriptsDir();
 
     // Execução do script e geração do pdf
     this.makeLaudo(laudo, hospital);
@@ -168,10 +175,9 @@ export class LaudoService {
 
     console.log('O SCRIPT EM PYTHON FUNCIONOU');
 
-    //LISTAR O DIRETÓRIO DOS SCRIPTS EM PYTHON
-    listScriptsDir();
-
+    console.log('INICIANDO A GERAÇÃO DO PDF');
     let pdf_generation_result: string;
+
     // tenta gerar o pdf
     try {
       pdf_generation_result = this.generatePdf(laudo, hospital);
@@ -252,12 +258,15 @@ export class LaudoService {
   }
 
   private generatePdf(laudo: LaudoInfo, hospital: HospitalInfo): string {
-    console.log(laudo.data_distribuicao);
+    console.log('INFORMAÇÕES RELATIVAS AO LAUDO:');
+    console.log(laudo);
+    console.log('INFORMAÇÕES RELATIVAS AO HOSPITAL');
+    console.log(hospital);
+
     let data = laudo.data_distribuicao;
     if (data instanceof Date) {
       data = ProjUtils.DateToString(data);
     }
-    console.log(data);
 
     const [texContent, valorFinal] = getFinalDocument({
       razaoSocial: hospital.name,
@@ -274,7 +283,7 @@ export class LaudoService {
     // Salva o arquivo .tex
     const texPath = join(LAUDOS_DIR, `${laudo.file_name}.tex`);
     writeFileSync(texPath, texContent);
-    console.log(`Arquivo .tex gerado em: ${texPath}`);
+    console.log(`ARQUIVO .tex GERADO EM: ${texPath}`);
 
     // Compila o .tex para .pdf
     try {
@@ -303,6 +312,7 @@ export class LaudoService {
       }
     });
 
+    // REMOVE O DIRETÓRIO USADO PARA ARMAZENAR OS DADOS GERADOS PELO SCRIPT EM PYTHON
     rmSync(join(SCRIPTS_DIR, `H${hospital.cnes}${hospital.estado}`), {
       recursive: true,
       force: true,
