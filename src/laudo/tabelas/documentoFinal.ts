@@ -1,5 +1,6 @@
 import { copyFileSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
+import { LAUDOS_DIR } from 'src/project_structure/dirs';
 import { getresumoAnual } from './anual';
 import { getfilesPA } from './arquivosPA';
 import { getfilesSP } from './arquivosSP';
@@ -9,7 +10,6 @@ import { getMensal } from './mensal';
 import { getProcedimentoAcumulado } from './procedimentoAcumulado';
 import { getresumoMes } from './resumoMes';
 import { getResumoTotal } from './resumoTotal';
-import { LAUDOS_DIR } from 'src/project_structure/dirs';
 
 export interface finalDocParams {
   razaoSocial: string;
@@ -92,7 +92,7 @@ export function getFinalDocument(params: finalDocParams): string[] {
     estado: params.estado,
     numeroProcesso: params.numeroProcesso,
     dataDistribuicao: params.dataDistribuicao,
-    valorTotal: stileValorTotal(+total),
+    valorTotal: total,
   });
 
   return [
@@ -112,16 +112,4 @@ export function getFinalDocument(params: finalDocParams): string[] {
 
 function getEndDocument(): string {
   return `\\end{document}`;
-}
-
-export function stileValorTotal(valorTotal: number): string {
-  const valorFinal = valorTotal
-    .toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
-    .replace('R$', 'R\\$');
-  return valorFinal;
 }
