@@ -47,8 +47,9 @@ def correcao_ipcae(data_inicio: Tdata, data_fim: Tdata):  # noqa: E501
     if posicao_relativa_do_fim >= len(tabela_ipcae):
         posicao_relativa_do_fim = len(tabela_ipcae)-1
 
+    correcao_list = [(x/100.0) for x in tabela_ipcae[posicao_relativa_do_inicio:(posicao_relativa_do_fim+1)]]
 
-    indice_a_se_aplicar = m.prod([(x/100)+1 for x in tabela_ipcae[posicao_relativa_do_inicio:(posicao_relativa_do_fim+1)]])
+    indice_a_se_aplicar = sum(correcao_list)+1.0
 
     return indice_a_se_aplicar
 
@@ -79,7 +80,7 @@ def CalculaSelic(data_inicio: Tdata, data_fim: Tdata, selic_array: list[float]):
     if posicao_do_fim_na_array >= len(selic_array):
         posicao_do_fim_na_array = len(selic_array)-1
 
-    return m.prod(selic_array[posicao_do_inicio_na_array:posicao_do_fim_na_array+1])
+    return sum([x-1.0 for x in selic_array[posicao_do_inicio_na_array:posicao_do_fim_na_array+1]]) + 1.0
 
 
 def correcao_absoluta(data_inicio: Tdata, data_fim: Tdata, selic_arr: list[float]):
@@ -136,10 +137,10 @@ def calcular_tunep(df: pd.DataFrame) -> pd.DataFrame:
     df_tunep = pd.read_csv(get_path('dados', 'tabela_tunep_mais_origem.csv'))
     df_tunep['TP_PROCEDIMENTO'] = df_tunep['TP_PROCEDIMENTO'] == 'H'
     df_tunep['CO_PROCEDIMENTO'] = df_tunep['CO_PROCEDIMENTO'].astype(str)
-     
+
     df['CO_PROCEDIMENTO'] = df['CO_PROCEDIMENTO'].astype(str)
     df = pd.merge(df, df_tunep, on='CO_PROCEDIMENTO', how='left').fillna(0)
-    
+
     df['ValorTUNEP'] = pd.to_numeric(df['ValorTUNEP'].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
     df['TUNEP'] = df['SP_QTD_ATO'] * df['ValorTUNEP']
     return df
@@ -157,35 +158,35 @@ def adicionar_base_sus(df: pd.DataFrame) -> pd.DataFrame:
 def formatar_colunas(df: pd.DataFrame) -> pd.DataFrame:
     # Formatação do código do procedimento
     df['CO_PROCEDIMENTO'] = df['CO_PROCEDIMENTO'].astype(str).str.zfill(10)
-    df['CO_PROCEDIMENTO'] = (df['CO_PROCEDIMENTO'].str[:2] + "." + 
-                            df['CO_PROCEDIMENTO'].str[2:4] + "." + 
-                            df['CO_PROCEDIMENTO'].str[4:6] + "." + 
-                            df['CO_PROCEDIMENTO'].str[6:9] + "-" + 
+    df['CO_PROCEDIMENTO'] = (df['CO_PROCEDIMENTO'].str[:2] + "." +
+                            df['CO_PROCEDIMENTO'].str[2:4] + "." +
+                            df['CO_PROCEDIMENTO'].str[4:6] + "." +
+                            df['CO_PROCEDIMENTO'].str[6:9] + "-" +
                             df['CO_PROCEDIMENTO'].str[9])
     # Formatação da data
     df["Mês/Ano"] = df["SP_MM"].astype(str).str.zfill(2) + "/" + df["SP_AA"].astype(str)
 
     df = df[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'Mês/Ano', 'SP_VALATO', 'SP_QTD_ATO', 'IVR', 'TUNEP', 'correcao', 'Total', 'Base SUS']].rename(
         columns = {'CO_PROCEDIMENTO': 'Procedimentos', 'NO_PROCEDIMENTO': 'Desc. Procedimento', 'SP_VALATO': 'Valor Base (R$)', 'SP_QTD_ATO': ' Qtd. Base', 'IVR': 'IVR (R$)', 'TUNEP': 'TUNEP (R$)', 'correcao':'Correção'})
-    
+
     return df
 
 def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: Tdata, data_fim: Tdata, tipo_valor: str):
-    
+
     df_filt = carregar_e_preparar_dados(csv_file_path)
 
     df_sum = agregar_ordenar_dados(df_filt)
-    
+
     df_desc = mesclar_com_desc_procedimentos(df_sum)
-    
+
     if tipo_valor == 'IVR':
         df_desc = calcular_ivr(df_desc)
         df_desc["TUNEP"] = 0
-        
+
     elif tipo_valor == 'TUNEP':
         df_desc = calcular_tunep(df_desc)
         df_desc["IVR"] = 0
-        
+
     elif tipo_valor == 'Ambos':
         df_desc = calcular_ivr(df_desc)
         df_desc = calcular_tunep(df_desc)
@@ -197,11 +198,11 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: 
         # Caso queira valor vazio e nao zero
         # df_desc.loc[ivr_maior, "TUNEP"] = pd.NA
         # df_desc.loc[~ivr_maior, "IVR"] = pd.NA
-    
+
     df_final = aplicar_correcao(df_desc, data_inicio, data_fim)
-    
+
     df_final = adicionar_base_sus(df_final)
-    
+
     df_final = formatar_colunas(df_final)
 
     print(df_final)
