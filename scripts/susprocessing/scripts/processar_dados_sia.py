@@ -113,12 +113,12 @@ def obter_taxa_correcao(data_inicio: Tdata, data_fim: Tdata) -> float:
 
 def carregar_e_preparar_dados(caminho_arquivo_csv: str) -> pd.DataFrame:
     df = pd.read_csv(caminho_arquivo_csv, encoding='utf-8-sig', low_memory=False)
-    df_filt = df[['PA_CODUNI', 'PA_CMP', 'PA_PROC_ID', 'PA_QTDAPR', 'PA_VALPRO']]
+    df_filt = df[['PA_CODUNI', 'PA_CMP', 'PA_PROC_ID', 'PA_QTDAPR', 'PA_VALAPR']]
     df_filt = df_filt[df_filt['PA_QTDAPR'] > 0]
     return df_filt
 
 def agregar_ordenar_dados(df: pd.DataFrame) -> pd.DataFrame:
-    df_soma = df.groupby(['PA_CODUNI', 'PA_CMP', 'PA_PROC_ID'], as_index=False).agg({'PA_VALPRO': 'sum', 'PA_QTDAPR': 'sum'})
+    df_soma = df.groupby(['PA_CODUNI', 'PA_CMP', 'PA_PROC_ID'], as_index=False).agg({'PA_VALAPR': 'sum', 'PA_QTDAPR': 'sum'})
     return df_soma.sort_values(by='PA_PROC_ID')
 
 def mesclar_com_desc_procedimentos(df: pd.DataFrame) -> pd.DataFrame:
@@ -126,11 +126,11 @@ def mesclar_com_desc_procedimentos(df: pd.DataFrame) -> pd.DataFrame:
     df['PA_PROC_ID'] = df['PA_PROC_ID'].astype(str)
     df_procedimentos['CO_PROCEDIMENTO'] = df_procedimentos['CO_PROCEDIMENTO'].astype(str)
     df_descricao = pd.merge(df, df_procedimentos, left_on='PA_PROC_ID', right_on='CO_PROCEDIMENTO', how='left')
-    df_descricao = df_descricao[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'PA_CMP', 'PA_VALPRO', 'PA_QTDAPR']]
+    df_descricao = df_descricao[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'PA_CMP', 'PA_VALAPR', 'PA_QTDAPR']]
     return df_descricao
 
 def calcular_ivr(df: pd.DataFrame) -> pd.DataFrame:
-    df["IVR"] = df["PA_VALPRO"] * 0.5
+    df["IVR"] = df["PA_VALAPR"] * 0.5
     return df
 
 def calcular_tunep(df: pd.DataFrame) -> pd.DataFrame:
@@ -166,8 +166,8 @@ def formatar_colunas(df: pd.DataFrame) -> pd.DataFrame:
     # Formatação da data
     df['PA_CMP'] = df['PA_CMP'].astype(str).str[4:] + '/' + df['PA_CMP'].astype(str).str[:4]
 
-    df = df[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'PA_CMP', 'PA_VALPRO', 'PA_QTDAPR', 'IVR', 'TUNEP', 'correcao', 'Total', 'Base SUS']].rename(
-        columns = {'CO_PROCEDIMENTO': 'Procedimentos', 'NO_PROCEDIMENTO': 'Desc. Procedimento', 'PA_CMP': 'Mês/Ano', 'PA_VALPRO': 'Valor Base (R$)', 'PA_QTDAPR': 'Qtd. Base', 'IVR': 'IVR (R$)', 'TUNEP': 'TUNEP (R$)', 'correcao' :'Correção'})
+    df = df[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'PA_CMP', 'PA_VALAPR', 'PA_QTDAPR', 'IVR', 'TUNEP', 'correcao', 'Total', 'Base SUS']].rename(
+        columns = {'CO_PROCEDIMENTO': 'Procedimentos', 'NO_PROCEDIMENTO': 'Desc. Procedimento', 'PA_CMP': 'Mês/Ano', 'PA_VALAPR': 'Valor Base (R$)', 'PA_QTDAPR': 'Qtd. Base', 'IVR': 'IVR (R$)', 'TUNEP': 'TUNEP (R$)', 'correcao' :'Correção'})
 
     return df
 
